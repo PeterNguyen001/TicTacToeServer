@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Unity.Collections;
@@ -6,6 +8,22 @@ using System.Text;
 
 public class NetworkServer : MonoBehaviour
 {
+    private LinkedList<Account> accountsList = new LinkedList<Account>();
+
+    private const int Username = 1;
+    private const int Password = 2;
+
+    private string clientUserID;
+    private string clientPass;
+
+    private string serverUserID;
+    private string serverPass;
+
+    public const int userType = 0;
+    public const string registerType = "2";
+    public const string loginType = "3";
+    public const string loggedInType = "4";
+
     public NetworkDriver networkDriver;
     private NativeList<NetworkConnection> networkConnections;
 
@@ -15,7 +33,27 @@ public class NetworkServer : MonoBehaviour
     const ushort NetworkPort = 9001;
 
     const int MaxNumberOfClientConnections = 1000;
+    void Awake()
+    {
+        GetAllAccount();
+    }
 
+    private void GetAllAccount()
+    {
+        DirectoryInfo dir = new DirectoryInfo("Profiles");
+        //int fileCount = Directory.GetFiles("Profiles", "*.*", SearchOption.AllDirectories).Length;
+        foreach (FileInfo file in dir.GetFiles())
+        {
+            string id = Path.GetFileNameWithoutExtension(file.Name);
+            string pass;
+            using StreamReader sr = new StreamReader("Profiles/" + id + ".txt");
+            {
+                pass = sr.ReadLine();
+            }
+            Debug.Log(id + " " + pass);
+            accountsList.AddLast(new Account(id, pass));
+        }
+    }
     void Start()
     {
         networkDriver = NetworkDriver.Create();
@@ -103,7 +141,7 @@ public class NetworkServer : MonoBehaviour
                         streamReader.ReadBytes(buffer);
                         byte[] byteBuffer = buffer.ToArray();
                         string msg = Encoding.Unicode.GetString(byteBuffer);
-                        ProcessReceivedMsg(msg);
+                        ProcessReceivedMsg(msg, networkConnections[i]);
                         buffer.Dispose();
                         break;
                     case NetworkEvent.Type.Disconnect:
@@ -136,9 +174,25 @@ public class NetworkServer : MonoBehaviour
         return true;
     }
 
-    private void ProcessReceivedMsg(string msg)
+    private void ProcessReceivedMsg(string msg, NetworkConnection networkConnection)
     {
         Debug.Log("Msg received = " + msg);
+        string[] userData = msg.Split(',');
+        string type = userData[userType];
+        if (type == registerType)
+        {
+            SendMessageToClient("Registering", networkConnection);
+            RegisterUser(userData, networkConnection);
+        }
+        if (type == loginType)
+        {
+            SendMessageToClient("Logging in", networkConnection);
+            LoginUser(userData, networkConnection);
+        }
+        if (type == loggedInType)
+        {
+
+        }
     }
 
     public void SendMessageToClient(string msg, NetworkConnection networkConnection)
@@ -156,6 +210,72 @@ public class NetworkServer : MonoBehaviour
         networkDriver.EndSend(streamWriter);
 
         buffer.Dispose();
+    }
+    private void RegisterUser(string[] userData, NetworkConnection networkConnection)
+    {
+        Debug.Log("Registering");
+        bool sameName = false;
+        clientUserID = userData[Username];
+        clientPass = userData[Password];
+        //Debug.Log("Username: " + clientUserID);
+        foreach (Account acc in accountsList)
+        {
+            serverUserID = acc.userID;
+            if (serverUserID == clientUserID)
+            {
+                sameName = true;
+                SendMessageToClient("Name Taken", networkConnection);
+            }
+        }
+
+        if (!sameName)
+        {
+            Debug.Log("Registered");
+            SaveNewProfile(userData, clientUserID);
+            accountsList.AddLast(new Account(clientUserID, clientPass));
+            SendMessageToClient("Registered", networkConnection);
+        }
+        else
+        {
+            Debug.Log("Name Taken");
+        }
+
+    }
+
+    private void SaveNewProfile(string[] data, string id)
+    {
+        using (StreamWriter sw = new StreamWriter("Profiles/" + id + ".txt"))
+        {
+            sw.Write(data[Password]);
+        }
+    }
+    private void LoginUser(string[] userData, NetworkConnection networkConnection)
+    {
+        bool sameProfile = false;
+        clientUserID = userData[Username];
+        clientPass = userData[Password];
+        Account newAcc = new Account(clientUserID, clientPass);
+        foreach (Account acc in accountsList)
+        {
+            serverUserID = acc.userID;
+            serverPass = acc.pass;
+            //Debug.Log("SID:"+serverUserID + "CID:" + clientUserID);
+            //Debug.Log("SP:" + serverPass + "CP:" + clientPass);
+
+            if (serverUserID == clientUserID && serverPass == clientPass)
+            {
+                Debug.Log("Logged In");
+                sameProfile = true;
+                SendMessageToClient(loggedInType.ToString() + ',', networkConnection);
+                break;
+            }
+
+        }
+
+        if (!sameProfile)
+        {
+            Debug.Log("Invalid User or Password");
+        }
     }
 
 }
