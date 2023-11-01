@@ -8,6 +8,7 @@ public class Account : MonoBehaviour
     public string userID { get; set; }
     public string pass { get; set; }
 
+    private GameRoom inGameRoom { get; set; }
 
     public Account(string userID, string pass)
     {
@@ -15,6 +16,10 @@ public class Account : MonoBehaviour
         this.pass = pass;
     }
 
+    public void PutUserInGameRoom(GameRoom GameRoom)
+    { inGameRoom = GameRoom; }
+    public GameRoom GetGameRoomUserIn()
+    { return inGameRoom; }
     public override bool Equals(object obj) => this.Equals(obj as Account);
 
     public bool Equals(Account a)
@@ -58,4 +63,5 @@ public class Account : MonoBehaviour
         return lhs.Equals(rhs);
     }
     public static bool operator !=(Account lhs, Account rhs) => !(lhs == rhs);
+
 }

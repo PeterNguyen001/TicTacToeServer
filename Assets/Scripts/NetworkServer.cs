@@ -9,20 +9,27 @@ using System.Text;
 public class NetworkServer : MonoBehaviour
 {
     private LinkedList<Account> accountsList = new LinkedList<Account>();
-
-    private const int Username = 1;
-    private const int Password = 2;
+    [SerializeField]
+    LinkedList<Account> aciveUsers;
 
     private string clientUserID;
     private string clientPass;
+    private string gameRoomName;
 
     private string serverUserID;
     private string serverPass;
 
     public const int userType = 0;
+    private const int Username = 1;
+    private const int Password = 2;
+    private const int GameRoomName = 1;
+
     public const string registerType = "2";
     public const string loginType = "3";
     public const string loggedInType = "4";
+
+    [SerializeField]
+    GameRoomsManager roomsManager;
 
     public NetworkDriver networkDriver;
     private NativeList<NetworkConnection> networkConnections;
@@ -179,6 +186,12 @@ public class NetworkServer : MonoBehaviour
         Debug.Log("Msg received = " + msg);
         string[] userData = msg.Split(',');
         string type = userData[userType];
+        Debug.Log(networkConnection);
+        CheckForUserType(networkConnection, userData, type);
+    }
+
+    private void CheckForUserType(NetworkConnection networkConnection, string[] userData, string type)
+    {
         if (type == registerType)
         {
             SendMessageToClient("Registering", networkConnection);
@@ -191,7 +204,7 @@ public class NetworkServer : MonoBehaviour
         }
         if (type == loggedInType)
         {
-
+            JoinOrCreateGame(userData, networkConnection);
         }
     }
 
@@ -238,6 +251,7 @@ public class NetworkServer : MonoBehaviour
         else
         {
             Debug.Log("Name Taken");
+            SendMessageToClient("Name Taken", networkConnection);
         }
 
     }
@@ -275,7 +289,25 @@ public class NetworkServer : MonoBehaviour
         if (!sameProfile)
         {
             Debug.Log("Invalid User or Password");
+            SendMessageToClient("Invalid User or Password", networkConnection);
         }
+    }
+
+    private void JoinOrCreateGame(string[] userData, NetworkConnection networkConnection)
+    {
+        clientUserID = userData[Username];
+        gameRoomName = userData[GameRoomName];
+        foreach (Account acc in accountsList)
+        {
+            serverUserID = acc.userID;
+            if (serverUserID == clientUserID)
+            {
+                aciveUsers.AddLast(acc);
+            }
+        }
+        SendMessageToClient("Joining " + gameRoomName, networkConnection);
+        Debug.Log("Create Game Room: " + gameRoomName);
+        roomsManager.CreateRoom(gameRoomName, clientUserID);    
     }
 
 }
