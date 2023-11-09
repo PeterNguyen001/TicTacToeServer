@@ -10,7 +10,7 @@ public class AccountManager : MonoBehaviour
 {
     private LinkedList<Account> accountsList = new LinkedList<Account>();
     [SerializeField]
-    LinkedList<Account> aciveUsers;
+    LinkedList<Account> aciveUsers = new LinkedList<Account>();
 
     private string clientUserID;
     private string clientPass;
