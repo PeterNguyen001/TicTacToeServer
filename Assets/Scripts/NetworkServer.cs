@@ -3,25 +3,19 @@ using UnityEngine.Assertions;
 using Unity.Collections;
 using Unity.Networking.Transport;
 using System.Text;
+using System.Collections.Generic;
 
 public class NetworkServer : MonoBehaviour
 {
     public NetworkDriver networkDriver;
     private NativeList<NetworkConnection> networkConnections;
-
     NetworkPipeline reliableAndInOrderPipeline;
     NetworkPipeline nonReliableNotInOrderedPipeline;
-
     const ushort NetworkPort = 9001;
-
     const int MaxNumberOfClientConnections = 1000;
-<<<<<<< Updated upstream
-
-=======
     Dictionary<int, NetworkConnection> idToConnectionLookup;
     Dictionary<NetworkConnection, int> connectionToIDLookup;
- 
->>>>>>> Stashed changes
+
     void Start()
     {
         if (NetworkServerProcessing.GetNetworkServer() == null)
@@ -114,11 +108,7 @@ public class NetworkServer : MonoBehaviour
                         streamReader.ReadBytes(buffer);
                         byte[] byteBuffer = buffer.ToArray();
                         string msg = Encoding.Unicode.GetString(byteBuffer);
-<<<<<<< Updated upstream
-                        ProcessReceivedMsg(msg);
-=======
                         NetworkServerProcessing.ReceivedMessageFromClient(msg, connectionToIDLookup[networkConnections[i]], pipelineUsed);
->>>>>>> Stashed changes
                         buffer.Dispose();
                         break;
                     case NetworkEvent.Type.Disconnect:
@@ -166,22 +156,12 @@ public class NetworkServer : MonoBehaviour
         return true;
     }
 
-<<<<<<< Updated upstream
-    private void ProcessReceivedMsg(string msg)
-    {
-        Debug.Log("Msg received = " + msg);
-    }
-
-    public void SendMessageToClient(string msg, NetworkConnection networkConnection)
-    {
-=======
     public void SendMessageToClient(string msg, int connectionID, TransportPipeline pipeline)
     {
         NetworkPipeline networkPipeline = reliableAndInOrderPipeline;
         if (pipeline == TransportPipeline.FireAndForget)
             networkPipeline = nonReliableNotInOrderedPipeline;
 
->>>>>>> Stashed changes
         byte[] msgAsByteArray = Encoding.Unicode.GetBytes(msg);
         NativeArray<byte> buffer = new NativeArray<byte>(msgAsByteArray, Allocator.Persistent);
         DataStreamWriter streamWriter;
@@ -193,11 +173,6 @@ public class NetworkServer : MonoBehaviour
 
         buffer.Dispose();
     }
-<<<<<<< Updated upstream
-=======
-
-
->>>>>>> Stashed changes
 
 }
 
