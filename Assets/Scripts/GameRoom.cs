@@ -1,66 +1,36 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GameRoom : MonoBehaviour
 {
-    private string name { get; set; }
-    private string user1Name { get; set; }
-    private string user2Name { get; set; }
+    public string Name { get; private set; }
+    public string User1Name { get; private set; }
+    public string User2Name { get; private set; }
 
-    private LinkedList<Account> aciveUsers;
+    public Account activeUser1 { get; private set; }
+    public Account activeUser2 { get; private set; }
 
-    public GameRoom(string userI,string roomName )
+    public GameRoom(Account user1, string roomName)
     {
-        user1Name = userI;
-        name = roomName;
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-            
+        activeUser1 = user1;
+        User1Name = user1.name;
+        Name = roomName;
     }
 
-    // Update is called once per frame
-    void Update()
+    //public void SetUser1(Account user)
+    //{
+    //    activeUser1 = user;
+    //    User1Name = user.name; // Assuming Account has a Username property
+    //}
+
+    public void SetUser2(Account user)
     {
-        
-    }
-    public void SetUser1Name(string newUserName)
-    {
-        // You can set the property like this.
-        user1Name = newUserName;
+        activeUser2 = user;
+        User2Name = user.name;
     }
 
-    public string GetUser1Name()
+    public Account[] GetActiveUsers()
     {
-        // You can get the property like this.
-        return user1Name;
+        return new Account[] { activeUser1, activeUser2 };
     }
-
-    public void SetUser2Name(string newUserName)
-    {
-        // You can set the property like this.
-        user2Name = newUserName;
-    }
-
-    public string GetUser2Name()
-    {
-        // You can get the property like this.
-        return user2Name;
-    }
-    public void SetroomName(string newUserName)
-    {
-        // You can set the property like this.
-        name = newUserName;
-    }
-
-    public string GetRoomName()
-    {
-        // You can get the property like this.
-        return name;
-    }
-
-    public LinkedList<Account> GetAciveUsers()
-    { return aciveUsers; }
 }

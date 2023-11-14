@@ -21,14 +21,15 @@ public class GameRoomsManager : MonoBehaviour
 
     }
 
-    public void CreateRoom(string userName, string gameRoomName)
+    public void CreateRoom(Account user, string gameRoomName)
     {
-        GameObject newGameRoom = new GameObject(gameRoomName);
-        GameRoom gameRoomScript = newGameRoom.AddComponent<GameRoom>();
-        gameRoomScript.SetUser1Name(userName);
-        gameRoomScript.SetroomName(gameRoomName);
+        //GameObject newGameRoom = new GameObject(gameRoomName);
+        //GameRoom gameRoomScript = newGameRoom.AddComponent<GameRoom>();
+        //gameRoomScript.SetUser1(user);
 
-        gameRooms.AddLast(gameRoomScript); // Add to the end of the linked list.
+        //gameRooms.AddLast(gameRoomScript); // Add to the end of the linked list.
+
+        gameRooms.AddLast(new GameRoom(user, gameRoomName));
 
         if (gameRooms.Count > 0 && gameRooms.First.Value != null)
         {
@@ -39,6 +40,6 @@ public class GameRoomsManager : MonoBehaviour
             Debug.Log("Failed to create a room.");
         }
 
-        newGameRoom.transform.SetParent(roomList.transform);
+        //newGameRoom.transform.SetParent(roomList.transform);
     }
 }

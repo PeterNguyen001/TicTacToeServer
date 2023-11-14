@@ -4,64 +4,51 @@ using UnityEngine;
 
 public class Account : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public string userID { get; set; }
+    public string username { get; set; }
     public string pass { get; set; }
 
     private GameRoom inGameRoom { get; set; }
 
     public Account(string userID, string pass)
     {
-        this.userID = userID;
+        this.username = userID;
         this.pass = pass;
     }
 
-    public void PutUserInGameRoom(GameRoom GameRoom)
-    { inGameRoom = GameRoom; }
-    public GameRoom GetGameRoomUserIn()
-    { return inGameRoom; }
-    public override bool Equals(object obj) => this.Equals(obj as Account);
-
-    public bool Equals(Account a)
+    // Overriding the Equals method
+    public override bool Equals(object obj)
     {
-        if (a is null)
-        {
-            return false;
-        }
+        var account = obj as Account;
+        return account != null && username == account.username;
+    }
 
-        // Optimization for a common success case.
-        if (Object.ReferenceEquals(this, a))
+    // Overriding the GetHashCode method
+    public override int GetHashCode()
+    {
+        return (username != null ? username.GetHashCode() : 0);
+    }
+
+    // Overloading the == operator
+    public static bool operator ==(Account left, Account right)
+    {
+        if (ReferenceEquals(left, right))
         {
             return true;
         }
 
-        // If run-time types are not exactly the same, return false.
-        if (this.GetType() != a.GetType())
+        if (left is null || right is null)
         {
             return false;
         }
 
-        // Return true if the fields match.
-        // Note that the base class is not invoked because it is
-        // System.Object, which defines Equals as reference equality.
-        return (userID == a.userID) && (pass == a.pass);
+        return left.username == right.username;
     }
-    public override int GetHashCode() => (userID, pass).GetHashCode();
-    public static bool operator ==(Account lhs, Account rhs)
+
+    // Overloading the != operator
+    public static bool operator !=(Account left, Account right)
     {
-        if (lhs is null)
-        {
-            if (rhs is null)
-            {
-                return true;
-            }
-
-            // Only the left side is null.
-            return false;
-        }
-        // Equals handles case of null on right side.
-        return lhs.Equals(rhs);
+        return !(left == right);
     }
-    public static bool operator !=(Account lhs, Account rhs) => !(lhs == rhs);
 
+    // Existing code...
 }

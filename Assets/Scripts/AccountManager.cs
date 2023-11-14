@@ -5,12 +5,13 @@ using Unity.Burst.CompilerServices;
 using Unity.Networking.Transport;
 using UnityEngine;
 using static UnityEditor.PlayerSettings.Switch;
+using static UnityEngine.UIElements.UxmlAttributeDescription;
 
 public class AccountManager : MonoBehaviour
 {
     private LinkedList<Account> accountsList = new LinkedList<Account>();
     [SerializeField]
-    LinkedList<Account> aciveUsers = new LinkedList<Account>();
+    Dictionary<int, Account> aciveUsers = new Dictionary<int, Account>();
 
     private string clientUserID;
     private string clientPass;
@@ -27,6 +28,9 @@ public class AccountManager : MonoBehaviour
     public const string registerType = "2";
     public const string loginType = "3";
     public const string loggedInType = "4";
+
+    [SerializeField]
+    GameRoomsManager roomsManager;
     // Start is called before the first frame update
     void Awake()
     {
@@ -52,6 +56,7 @@ public class AccountManager : MonoBehaviour
     void Start()
     {
         NetworkServerProcessing.SetAccountManager(this);
+        roomsManager = FindObjectOfType<GameRoomsManager>();
     }
 
     // Update is called once per frame
@@ -82,11 +87,12 @@ public class AccountManager : MonoBehaviour
         bool sameName = false;
         clientUserID = userData[Username];
         clientPass = userData[Password];
-        //Debug.Log("Username: " + clientUserID);
+        Account newAccout = new Account(clientUserID, clientPass);
+
+
         foreach (Account acc in accountsList)
         {
-            serverUserID = acc.userID;
-            if (serverUserID == clientUserID)
+            if (newAccout == acc)
             {
                 sameName = true;
                 NetworkServerProcessing.SendMessageToClient("Name Taken", clientConnectionID, pipeline);
@@ -97,15 +103,10 @@ public class AccountManager : MonoBehaviour
         {
             Debug.Log("Registered");
             SaveNewProfile(userData, clientUserID);
-            accountsList.AddLast(new Account(clientUserID, clientPass));
+            accountsList.AddLast(newAccout);
+            //aciveUsers.Add(clientConnectionID, accountsList);
             NetworkServerProcessing.SendMessageToClient("Registered", clientConnectionID, pipeline);
         }
-        else
-        {
-            Debug.Log("Name Taken");
-            NetworkServerProcessing.SendMessageToClient("Name Taken", clientConnectionID, pipeline);
-        }
-
     }
 
     private void SaveNewProfile(string[] data, string id)
@@ -117,32 +118,29 @@ public class AccountManager : MonoBehaviour
     }
     private void LoginUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
-        bool sameProfile = false;
+        bool bFoundSameProfile = false;
         clientUserID = userData[Username];
         clientPass = userData[Password];
         Account newAcc = new Account(clientUserID, clientPass);
         foreach (Account acc in accountsList)
         {
-            serverUserID = acc.userID;
             serverPass = acc.pass;
-            //Debug.Log("SID:"+serverUserID + "CID:" + clientUserID);
-            //Debug.Log("SP:" + serverPass + "CP:" + clientPass);
 
-            if (serverUserID == clientUserID && serverPass == clientPass)
+            if (newAcc == acc && serverPass == clientPass)
             {
                 Debug.Log("Logged In");
-                sameProfile = true;
+                bFoundSameProfile = true;
                 NetworkServerProcessing.SendMessageToClient(loggedInType.ToString() + ',', clientConnectionID, pipeline);
-                aciveUsers.AddLast(acc);
+                aciveUsers.Add(clientConnectionID,acc);
                 break;
             }
-
         }
-
-        if (!sameProfile)
+        if (!bFoundSameProfile)
         {
+
             Debug.Log("Invalid User or Password");
             NetworkServerProcessing.SendMessageToClient("Invalid User or Password", clientConnectionID, pipeline);
+            
         }
     }
 
@@ -152,14 +150,14 @@ public class AccountManager : MonoBehaviour
         gameRoomName = userData[GameRoomName];
         foreach (Account acc in accountsList)
         {
-            serverUserID = acc.userID;
+            serverUserID = acc.username;
             if (serverUserID == clientUserID)
             {
-                aciveUsers.AddLast(acc);
+                roomsManager.CreateRoom(acc, gameRoomName);
+                //aciveUsers.AddLast(acc);
             }
         }
         NetworkServerProcessing.SendMessageToClient("Joining " + gameRoomName, clientConnectionID, pipeline);
         Debug.Log("Create Game Room: " + gameRoomName);
-        //roomsManager.CreateRoom(gameRoomName, clientUserID);
     }
 }
