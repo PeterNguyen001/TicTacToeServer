@@ -11,7 +11,7 @@ public class AccountManager : MonoBehaviour
 {
     private LinkedList<Account> accountsList = new LinkedList<Account>();
     [SerializeField]
-    Dictionary<int, Account> aciveUsers = new Dictionary<int, Account>();
+    Dictionary<int, Account> acivePlayers = new Dictionary<int, Account>();
 
     private string clientUserID;
     private string clientPass;
@@ -29,6 +29,7 @@ public class AccountManager : MonoBehaviour
     public const string loginType = "3";
     public const string loggedInType = "4";
     public const string waitType = "5";
+    public const string gamerType = "6";
 
     [SerializeField]
     GameRoomsManager roomsManager;
@@ -47,9 +48,7 @@ public class AccountManager : MonoBehaviour
             string id = Path.GetFileNameWithoutExtension(file.Name);
             string pass;
             using StreamReader sr = new StreamReader("Profiles/" + id + ".txt");
-            {
-                pass = sr.ReadLine();
-            }
+            { pass = sr.ReadLine(); }
             Debug.Log(id + " " + pass);
             accountsList.AddLast(new Account(id, pass));
         }
@@ -113,9 +112,7 @@ public class AccountManager : MonoBehaviour
     private void SaveNewProfile(string[] data, string id)
     {
         using (StreamWriter sw = new StreamWriter("Profiles/" + id + ".txt"))
-        {
-            sw.Write(data[Password]);
-        }
+        { sw.Write(data[Password]); }
     }
     private void LoginUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
@@ -151,13 +148,26 @@ public class AccountManager : MonoBehaviour
         Account newAccount = new Account(clientUserID, clientPass);
         gameRoomName = userData[GameRoomName];
 
-        if(roomsManager.GetRoom(gameRoomName) == null) 
-        { roomsManager.CreateRoom(newAccount, gameRoomName); }
+        if(roomsManager.CheckForRoomExistence(gameRoomName) == null) 
+        { roomsManager.CreateNewRoom(newAccount, gameRoomName); }
         else
-        { roomsManager.AddSecondPlayerToRoom(newAccount, gameRoomName); }
-        aciveUsers.Add(clientConnectionID, newAccount);
+        { 
+            roomsManager.AddSecondPlayerToRoom(newAccount, gameRoomName);
+            NetworkServerProcessing.SendMessageToClient(gamerType.ToString() + ',' + gameRoomName, clientConnectionID, pipeline);
+        }
+        acivePlayers.Add(clientConnectionID, newAccount);
  
         NetworkServerProcessing.SendMessageToClient("Joining " + gameRoomName, clientConnectionID, pipeline);
         Debug.Log("Create Game Room: " + gameRoomName);
+    }
+
+    public void RemovePlayer(int playerID)
+    {
+        if(acivePlayers.ContainsKey(playerID)) 
+        { 
+            Account playerToRemove = acivePlayers[playerID];
+            roomsManager.RemovePlayerFromRoom(playerToRemove.username, playerToRemove.inGameRoom.name);           
+            acivePlayers.Remove(playerID);
+        }
     }
 }

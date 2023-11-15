@@ -5,22 +5,40 @@ public class GameRoom
 {
     public string name { get; private set; }
 
-    public Account activePlayer1 { get; private set; }
-    public Account activePlayer2 { get; private set; }
 
-    public GameRoom(Account user1, string roomName)
+    private Dictionary<string, Account> players = new Dictionary<string, Account>();
+
+public GameRoom(Account player, string roomName)
     {
-        activePlayer1 = user1;
+        player.PutPlayerInGameroom(this);
+        players.Add(player.username, player);
         name = roomName;
     }
 
-    public void AddPlayer2(Account user)
+    public void AddPlayer2(Account player)
     {
-        activePlayer2 = user;
+        player.PutPlayerInGameroom(this);
+        players.Add(player.username, player);
     }
 
-    //public LinkedList<Account> GetActivePlayers()
-    //{
-    //    return new LinkedList<Account> { activePlayer1, activePlayer2 };
-    //}
+    public void RemovePlayer(string username) 
+    {
+        if (players.ContainsKey(username))
+        {
+            players.Remove(username);
+            Debug.Log("Remove player " + username);
+        }
+        else
+        {
+            Debug.Log("Player not found in the room.");
+        }
+    }
+
+    public Dictionary<string, Account> GetActivePlayers() { return players; }
+
+    public bool IsEmpty() { return players.Count == 0; }
+
+    public bool IsFull() { return players.Count == 2; }
+
+    public bool IsHalfFull() { return players.Count == 1;}
 }

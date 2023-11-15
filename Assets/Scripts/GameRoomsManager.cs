@@ -17,35 +17,31 @@ public class GameRoomsManager : MonoBehaviour
 
     }
 
-    public void CreateRoom(Account user, string roomName)
+    public void CreateNewRoom(Account user, string roomName)
     {
-
-
         gameRooms.Add(roomName ,new GameRoom(user, roomName));
 
-        //if (gameRooms.Count > 0)
-        //{
-        //    Debug.Log("Room created successfully.");
-        //}
-        //else
-        //{
-        //    Debug.Log("Failed to create a room.");
-        //}
-
-
+        if (gameRooms.ContainsKey(roomName))
+        {
+            Debug.Log("Room created successfully.");
+        }
+        else
+        {
+            Debug.Log("Failed to create a room.");
+        }
     }
 
-    public bool AddSecondPlayerToRoom(Account user2, string roomName)
+    public bool AddSecondPlayerToRoom(Account player2, string roomName)
     {
         if (gameRooms.TryGetValue(roomName, out GameRoom room))
         {
-            if (room.activePlayer2 == null)
+            if (room.IsHalfFull())
             {
-                room.AddPlayer2(user2);
-                Debug.Log($"User {user2.username} added to room {roomName}.");
+                room.AddPlayer2(player2);
+                Debug.Log($"User {player2.username} added to room {roomName}.");
                 return true;
             }
-            else
+            else if (room.IsFull())
             {
                 Debug.Log($"Room {roomName} already has two users.");
             }
@@ -57,7 +53,7 @@ public class GameRoomsManager : MonoBehaviour
 
         return false;
     }
-    public GameRoom GetRoom(string roomName)
+    public GameRoom CheckForRoomExistence(string roomName)
     {
         if (gameRooms.TryGetValue(roomName, out GameRoom room))
         {
@@ -66,5 +62,31 @@ public class GameRoomsManager : MonoBehaviour
 
         Debug.Log($"Room {roomName} not found.");
         return null;
+    }
+
+    public void RemoveRoomIfEmpty(string roomName)
+    {
+        if (gameRooms.TryGetValue(roomName, out GameRoom room))
+        {
+            if (room.IsEmpty())
+            {
+                gameRooms.Remove(roomName);
+                Debug.Log($"Room {roomName} removed because it's empty.");
+            }
+        }
+    }
+
+    public void RemovePlayerFromRoom(string username, string roomName)
+    {
+        if (gameRooms.TryGetValue(roomName, out GameRoom room))
+        {
+            room.RemovePlayer(username);
+            RemoveRoomIfEmpty(roomName);
+
+        }
+        else
+        {
+            Debug.Log($"Room {roomName} not found.");
+        }
     }
 }
