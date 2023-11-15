@@ -41,7 +41,7 @@ static public class NetworkServerProcessing
     }
     static public void DisconnectionEvent(int clientConnectionID)
     {
-        //accountManager.RemovePlayer(clientConnectionID);
+        accountManager.DisconnectPlayer(clientConnectionID);
         Debug.Log("Client disconnection, ID == " + clientConnectionID);
     }
 

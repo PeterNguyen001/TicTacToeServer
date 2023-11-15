@@ -78,6 +78,10 @@ public class AccountManager : MonoBehaviour
         }
         else if(type == loggedInType)
         { JoinOrCreateGame(userData, clientConnectionID, pipeline); }
+        else if(type == waitType || type == gamerType)
+        {
+            RemovePlayer(clientConnectionID);
+        }
         else
         { Debug.Log(userData); }
     }
@@ -169,10 +173,15 @@ public class AccountManager : MonoBehaviour
     public void RemovePlayer(int playerID)
     {
         if(acivePlayers.ContainsKey(playerID)) 
-        { 
-            Account playerToRemove = acivePlayers[playerID];
-            roomsManager.RemovePlayerFromRoom(playerToRemove.id, playerToRemove.inGameRoom.name);           
-            acivePlayers.Remove(playerID);
+        {
+            string roomPlayerIn = acivePlayers[playerID].inGameRoom.name;
+            roomsManager.RemovePlayerFromRoom(playerID, roomPlayerIn);
+            Debug.Log("Remove Player from Game Room");
         }
+    }
+    public void DisconnectPlayer(int playerID)
+    {
+        RemovePlayer(playerID);
+        acivePlayers.Remove(playerID);
     }
 }
