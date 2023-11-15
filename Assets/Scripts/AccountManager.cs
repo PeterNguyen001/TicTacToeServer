@@ -128,7 +128,9 @@ public class AccountManager : MonoBehaviour
             {
                 Debug.Log("Logged In");
                 bFoundSameProfile = true;
-                NetworkServerProcessing.SendMessageToClient(loggedInType.ToString() + ',', clientConnectionID, pipeline);              
+                NetworkServerProcessing.SendMessageToClient(loggedInType.ToString() + ',', clientConnectionID, pipeline);
+                newAccount.id = clientConnectionID;
+                acivePlayers.Add(clientConnectionID, newAccount);
                 break;
             }
         }
@@ -143,19 +145,22 @@ public class AccountManager : MonoBehaviour
 
     private void JoinOrCreateGame(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
-        clientUserID = userData[Username];
-        clientPass = userData[Password];
-        Account newAccount = new Account(clientUserID, clientPass);
+        Account newAccount = null;
+        if ((acivePlayers.ContainsKey(clientConnectionID)))
+        {
+            newAccount = acivePlayers[clientConnectionID];
+        }
+        clientUserID = newAccount.username;
+        clientPass = "";     
         gameRoomName = userData[GameRoomName];
 
         if(roomsManager.CheckForRoomExistence(gameRoomName) == null) 
         { roomsManager.CreateNewRoom(newAccount, gameRoomName); }
         else
         { 
-            roomsManager.AddSecondPlayerToRoom(newAccount, gameRoomName);
-            NetworkServerProcessing.SendMessageToClient(gamerType.ToString() + ',' + gameRoomName, clientConnectionID, pipeline);
+            roomsManager.AddSecondPlayerToRoom(newAccount, gameRoomName);          
         }
-        acivePlayers.Add(clientConnectionID, newAccount);
+        
  
         NetworkServerProcessing.SendMessageToClient("Joining " + gameRoomName, clientConnectionID, pipeline);
         Debug.Log("Create Game Room: " + gameRoomName);
@@ -166,7 +171,7 @@ public class AccountManager : MonoBehaviour
         if(acivePlayers.ContainsKey(playerID)) 
         { 
             Account playerToRemove = acivePlayers[playerID];
-            roomsManager.RemovePlayerFromRoom(playerToRemove.username, playerToRemove.inGameRoom.name);           
+            roomsManager.RemovePlayerFromRoom(playerToRemove.id, playerToRemove.inGameRoom.name);           
             acivePlayers.Remove(playerID);
         }
     }

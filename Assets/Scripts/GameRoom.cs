@@ -6,27 +6,27 @@ public class GameRoom
     public string name { get; private set; }
 
 
-    private Dictionary<string, Account> players = new Dictionary<string, Account>();
+    private Dictionary<int, Account> players = new Dictionary<int, Account>();
 
 public GameRoom(Account player, string roomName)
     {
         player.PutPlayerInGameroom(this);
-        players.Add(player.username, player);
+        players.Add(player.id, player);
         name = roomName;
     }
 
-    public void AddPlayer2(Account player)
+    public void AddPlayer2(int id, Account player)
     {
         player.PutPlayerInGameroom(this);
-        players.Add(player.username, player);
+        players.Add(id, player);
     }
 
-    public void RemovePlayer(string username) 
+    public void RemovePlayer(int id) 
     {
-        if (players.ContainsKey(username))
+        if (players.ContainsKey(id))
         {
-            players.Remove(username);
-            Debug.Log("Remove player " + username);
+            players.Remove(id);
+            Debug.Log("Remove player " + id);
         }
         else
         {
@@ -34,7 +34,7 @@ public GameRoom(Account player, string roomName)
         }
     }
 
-    public Dictionary<string, Account> GetActivePlayers() { return players; }
+    public Dictionary<int, Account> GetActivePlayers() { return players; }
 
     public bool IsEmpty() { return players.Count == 0; }
 

@@ -7,6 +7,8 @@ public class Account
     public string username { get; set; }
     public string pass { get; set; }
 
+    public int id { get; set; }
+
     public GameRoom inGameRoom { get; private set; }
 
     public Account(string username, string pass)
