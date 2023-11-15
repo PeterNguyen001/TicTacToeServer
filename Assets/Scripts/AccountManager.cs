@@ -28,6 +28,7 @@ public class AccountManager : MonoBehaviour
     public const string registerType = "2";
     public const string loginType = "3";
     public const string loggedInType = "4";
+    public const string waitType = "5";
 
     [SerializeField]
     GameRoomsManager roomsManager;
@@ -71,15 +72,15 @@ public class AccountManager : MonoBehaviour
             NetworkServerProcessing.SendMessageToClient("Registering", clientConnectionID, pipeline);
             RegisterUser(userData, clientConnectionID, pipeline);
         }
-        if (type == loginType)
+        else if (type == loginType)
         {
             NetworkServerProcessing.SendMessageToClient("0Logging in", clientConnectionID, pipeline);
             LoginUser(userData, clientConnectionID, pipeline);
         }
-        if (type == loggedInType)
-        {
-            JoinOrCreateGame(userData, clientConnectionID, pipeline);
-        }
+        else if(type == loggedInType)
+        { JoinOrCreateGame(userData, clientConnectionID, pipeline); }
+        else
+        { Debug.Log(userData); }
     }
     private void RegisterUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
@@ -87,12 +88,12 @@ public class AccountManager : MonoBehaviour
         bool sameName = false;
         clientUserID = userData[Username];
         clientPass = userData[Password];
-        Account newAccout = new Account(clientUserID, clientPass);
+        Account newAccount = new Account(clientUserID, clientPass);
 
 
         foreach (Account acc in accountsList)
         {
-            if (newAccout == acc)
+            if (newAccount == acc)
             {
                 sameName = true;
                 NetworkServerProcessing.SendMessageToClient("Name Taken", clientConnectionID, pipeline);
@@ -103,7 +104,7 @@ public class AccountManager : MonoBehaviour
         {
             Debug.Log("Registered");
             SaveNewProfile(userData, clientUserID);
-            accountsList.AddLast(newAccout);
+            accountsList.AddLast(newAccount);
             //aciveUsers.Add(clientConnectionID, accountsList);
             NetworkServerProcessing.SendMessageToClient("Registered", clientConnectionID, pipeline);
         }
@@ -121,17 +122,16 @@ public class AccountManager : MonoBehaviour
         bool bFoundSameProfile = false;
         clientUserID = userData[Username];
         clientPass = userData[Password];
-        Account newAcc = new Account(clientUserID, clientPass);
+        Account newAccount = new Account(clientUserID, clientPass);
         foreach (Account acc in accountsList)
         {
             serverPass = acc.pass;
 
-            if (newAcc == acc && serverPass == clientPass)
+            if (newAccount == acc && serverPass == clientPass)
             {
                 Debug.Log("Logged In");
                 bFoundSameProfile = true;
-                NetworkServerProcessing.SendMessageToClient(loggedInType.ToString() + ',', clientConnectionID, pipeline);
-                aciveUsers.Add(clientConnectionID,acc);
+                NetworkServerProcessing.SendMessageToClient(loggedInType.ToString() + ',', clientConnectionID, pipeline);              
                 break;
             }
         }
@@ -147,16 +147,16 @@ public class AccountManager : MonoBehaviour
     private void JoinOrCreateGame(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
         clientUserID = userData[Username];
+        clientPass = userData[Password];
+        Account newAccount = new Account(clientUserID, clientPass);
         gameRoomName = userData[GameRoomName];
-        foreach (Account acc in accountsList)
-        {
-            serverUserID = acc.username;
-            if (serverUserID == clientUserID)
-            {
-                roomsManager.CreateRoom(acc, gameRoomName);
-                //aciveUsers.AddLast(acc);
-            }
-        }
+
+        if(roomsManager.GetRoom(gameRoomName) == null) 
+        { roomsManager.CreateRoom(newAccount, gameRoomName); }
+        else
+        { roomsManager.AddSecondPlayerToRoom(newAccount, gameRoomName); }
+        aciveUsers.Add(clientConnectionID, newAccount);
+ 
         NetworkServerProcessing.SendMessageToClient("Joining " + gameRoomName, clientConnectionID, pipeline);
         Debug.Log("Create Game Room: " + gameRoomName);
     }

@@ -1,36 +1,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameRoom : MonoBehaviour
+public class GameRoom
 {
-    public string Name { get; private set; }
-    public string User1Name { get; private set; }
-    public string User2Name { get; private set; }
+    public string name { get; private set; }
 
-    public Account activeUser1 { get; private set; }
-    public Account activeUser2 { get; private set; }
+    public Account activePlayer1 { get; private set; }
+    public Account activePlayer2 { get; private set; }
 
     public GameRoom(Account user1, string roomName)
     {
-        activeUser1 = user1;
-        User1Name = user1.name;
-        Name = roomName;
+        activePlayer1 = user1;
+        name = roomName;
     }
 
-    //public void SetUser1(Account user)
+    public void AddPlayer2(Account user)
+    {
+        activePlayer2 = user;
+    }
+
+    //public LinkedList<Account> GetActivePlayers()
     //{
-    //    activeUser1 = user;
-    //    User1Name = user.name; // Assuming Account has a Username property
+    //    return new LinkedList<Account> { activePlayer1, activePlayer2 };
     //}
-
-    public void SetUser2(Account user)
-    {
-        activeUser2 = user;
-        User2Name = user.name;
-    }
-
-    public Account[] GetActiveUsers()
-    {
-        return new Account[] { activeUser1, activeUser2 };
-    }
 }

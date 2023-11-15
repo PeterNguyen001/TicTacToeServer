@@ -2,16 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Account : MonoBehaviour
+public class Account
 {
     public string username { get; set; }
     public string pass { get; set; }
 
     private GameRoom inGameRoom { get; set; }
 
-    public Account(string userID, string pass)
+    public Account(string username, string pass)
     {
-        this.username = userID;
+        this.username = username;
         this.pass = pass;
     }
 

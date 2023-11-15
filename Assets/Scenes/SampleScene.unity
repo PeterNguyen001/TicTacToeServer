@@ -265,6 +265,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6d6b0bd0a48f544e905b74a965b8b26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  roomsManager: {fileID: 522979030}
 --- !u!114 &522979030
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -277,7 +278,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70affd43a23c51247a587b8184232751, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomList: {fileID: 578013563}
 --- !u!1 &578013563
 GameObject:
   m_ObjectHideFlags: 0
