@@ -20,16 +20,20 @@ public class AccountManager : MonoBehaviour
     private string serverUserID;
     private string serverPass;
 
-    public const int userType = 0;
-    private const int Username = 1;
-    private const int Password = 2;
-    private const int GameRoomName = 1;
+    public const int commandSign = 0;
+    private const int usernameSign = 1;
+    private const int passwordSign = 2;
+    private const int gameRoomNameSign = 1;
+    private const int goBackSign = 1;
 
+    public const string changeUI = "1";
     public const string registerType = "2";
     public const string loginType = "3";
     public const string loggedInType = "4";
     public const string waitType = "5";
-    public const string gamerType = "6";
+    public const string inRoom = "6";
+    public const string playing = "7";
+    public const string goBack = "b";
 
     [SerializeField]
     GameRoomsManager roomsManager;
@@ -73,14 +77,19 @@ public class AccountManager : MonoBehaviour
         }
         else if (type == loginType)
         {
-            NetworkServerProcessing.SendMessageToClient("0Logging in", clientConnectionID, pipeline);
+            NetworkServerProcessing.SendMessageToClient("Logging in", clientConnectionID, pipeline);
             LoginUser(userData, clientConnectionID, pipeline);
         }
         else if(type == loggedInType)
         { JoinOrCreateGame(userData, clientConnectionID, pipeline); }
-        else if(type == waitType || type == gamerType)
+        else if(type == waitType || type == inRoom)
         {
-            RemovePlayer(clientConnectionID);
+            if (userData[goBackSign] == goBack)
+            { RemovePlayer(clientConnectionID); }
+        }
+        else if(type == playing)
+        {
+
         }
         else
         { Debug.Log(userData); }
@@ -89,8 +98,8 @@ public class AccountManager : MonoBehaviour
     {
         Debug.Log("Registering");
         bool sameName = false;
-        clientUserID = userData[Username];
-        clientPass = userData[Password];
+        clientUserID = userData[usernameSign];
+        clientPass = userData[passwordSign];
         Account newAccount = new Account(clientUserID, clientPass);
 
 
@@ -116,13 +125,13 @@ public class AccountManager : MonoBehaviour
     private void SaveNewProfile(string[] data, string id)
     {
         using (StreamWriter sw = new StreamWriter("Profiles/" + id + ".txt"))
-        { sw.Write(data[Password]); }
+        { sw.Write(data[passwordSign]); }
     }
     private void LoginUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
         bool bFoundSameProfile = false;
-        clientUserID = userData[Username];
-        clientPass = userData[Password];
+        clientUserID = userData[usernameSign];
+        clientPass = userData[passwordSign];
         Account newAccount = new Account(clientUserID, clientPass);
         foreach (Account acc in accountsList)
         {
@@ -132,9 +141,9 @@ public class AccountManager : MonoBehaviour
             {
                 Debug.Log("Logged In");
                 bFoundSameProfile = true;
-                NetworkServerProcessing.SendMessageToClient(loggedInType.ToString() + ',', clientConnectionID, pipeline);
-                newAccount.id = clientConnectionID;
-                acivePlayers.Add(clientConnectionID, newAccount);
+                NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomBrowserScreen, clientConnectionID, pipeline);
+                acc.id = clientConnectionID;
+                acivePlayers.Add(clientConnectionID, acc);
                 break;
             }
         }
@@ -156,7 +165,7 @@ public class AccountManager : MonoBehaviour
         }
         clientUserID = newAccount.username;
         clientPass = "";     
-        gameRoomName = userData[GameRoomName];
+        gameRoomName = userData[gameRoomNameSign];
 
         if(roomsManager.CheckForRoomExistence(gameRoomName) == null) 
         { roomsManager.CreateNewRoom(newAccount, gameRoomName); }
@@ -172,6 +181,7 @@ public class AccountManager : MonoBehaviour
 
     public void RemovePlayer(int playerID)
     {
+        Debug.Log("Removing");
         if(acivePlayers.ContainsKey(playerID)) 
         {
             string roomPlayerIn = acivePlayers[playerID].inGameRoom.name;
@@ -184,4 +194,10 @@ public class AccountManager : MonoBehaviour
         RemovePlayer(playerID);
         acivePlayers.Remove(playerID);
     }
+
+    public void TalkToGameRoom(string[] userData, int clientConnectionID)
+    {
+
+    }
+    
 }

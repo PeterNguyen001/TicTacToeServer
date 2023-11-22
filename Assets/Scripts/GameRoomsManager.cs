@@ -10,10 +10,12 @@ public class GameRoomsManager : MonoBehaviour
     public const string loginType = "3";
     public const string loggedInType = "4";
     public const string waitType = "5";
-    public const string gamerType = "6";
+    public const string inRoom = "6";
+    private const string playing = "7";
     // Start is called before the first frame update
     void Start()
     {
+        NetworkServerProcessing.SetGameRoomManager(this);
     }
 
     // Update is called once per frame
@@ -28,6 +30,7 @@ public class GameRoomsManager : MonoBehaviour
 
         if (gameRooms.ContainsKey(roomName))
         {
+            NetworkServerProcessing.ChangeClientUI(ScreenID.GameWaitingRoomScreen, user.id, TransportPipeline.ReliableAndInOrder);
             Debug.Log("Room created successfully.");
         }
         else
@@ -47,7 +50,7 @@ public class GameRoomsManager : MonoBehaviour
                 foreach (KeyValuePair<int, Account> playerEntry in room.GetActivePlayers())
                 {
                     int id = playerEntry.Key; // This is the integer key
-                    NetworkServerProcessing.SendMessageToClient(gamerType.ToString() + ',', id, TransportPipeline.ReliableAndInOrder);
+                    NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomScreen, id, TransportPipeline.ReliableAndInOrder);
                 }
                 return true;
             }

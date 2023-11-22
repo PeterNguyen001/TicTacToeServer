@@ -31,6 +31,11 @@ static public class NetworkServerProcessing
         networkServer.SendMessageToClient(msg, clientConnectionID, pipeline);
     }
 
+    static public void ChangeClientUI(ScreenID screenID, int id, TransportPipeline pipeline)
+    {
+        networkServer.SendMessageToClient("1" + ',' + (int)screenID, id, pipeline);
+    }
+
     #endregion
 
     #region Connection Events
@@ -51,6 +56,7 @@ static public class NetworkServerProcessing
     static NetworkServer networkServer;
     static GameLogic gameLogic;
     static AccountManager accountManager;
+    static GameRoomsManager gameRoomsManager;
 
     static public void SetNetworkServer(NetworkServer NetworkServer)
     {
@@ -68,6 +74,8 @@ static public class NetworkServerProcessing
     {
         accountManager = AccountManager;
     }
+    static public void SetGameRoomManager(GameRoomsManager GameRoomsManager) 
+    { gameRoomsManager = GameRoomsManager; }
     #endregion
 }
 

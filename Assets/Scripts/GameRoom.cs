@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class GameRoom
@@ -7,7 +8,7 @@ public class GameRoom
 
 
     private Dictionary<int, Account> players = new Dictionary<int, Account>();
-
+    private List<string> ticTacToeGrid = Enumerable.Repeat("",9).ToList();
 public GameRoom(Account player, string roomName)
     {
         player.PutPlayerInGameroom(this);
