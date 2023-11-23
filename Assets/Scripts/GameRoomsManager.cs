@@ -6,12 +6,7 @@ using static UnityEditor.Experimental.GraphView.GraphView;
 public class GameRoomsManager : MonoBehaviour
 {
     private Dictionary<string, GameRoom> gameRooms = new Dictionary<string, GameRoom>();
-    public const string registerType = "2";
-    public const string loginType = "3";
-    public const string loggedInType = "4";
-    public const string waitType = "5";
-    public const string inRoom = "6";
-    private const string playing = "7";
+
     // Start is called before the first frame update
     void Start()
     {

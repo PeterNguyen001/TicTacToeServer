@@ -32,7 +32,8 @@ public class AccountManager : MonoBehaviour
     public const string loggedInType = "4";
     public const string waitType = "5";
     public const string inRoom = "6";
-    public const string playing = "7";
+    public const string startGame = "7";
+    public const string playing = "8";
     public const string goBack = "b";
 
     [SerializeField]

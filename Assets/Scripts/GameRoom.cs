@@ -14,12 +14,14 @@ public GameRoom(Account player, string roomName)
         player.PutPlayerInGameroom(this);
         players.Add(player.id, player);
         name = roomName;
+        SetPlayerSymbol("X", player.id);
     }
 
     public void AddPlayer2(int id, Account player)
     {
         player.PutPlayerInGameroom(this);
         players.Add(id, player);
+        SetPlayerSymbol("O", player.id);
     }
 
     public void RemovePlayer(int id) 
@@ -35,6 +37,10 @@ public GameRoom(Account player, string roomName)
         }
     }
 
+    public void SetPlayerSymbol(string symbol, int id)
+    {
+        NetworkServerProcessing.SendMessageToClient(AccountManager.startGame + "," + symbol, id, TransportPipeline.ReliableAndInOrder);
+    }
     public Dictionary<int, Account> GetActivePlayers() { return players; }
 
     public bool IsEmpty() { return players.Count == 0; }

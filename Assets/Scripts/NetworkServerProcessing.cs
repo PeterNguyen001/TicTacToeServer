@@ -33,7 +33,7 @@ static public class NetworkServerProcessing
 
     static public void ChangeClientUI(ScreenID screenID, int id, TransportPipeline pipeline)
     {
-        networkServer.SendMessageToClient("1" + ',' + (int)screenID, id, pipeline);
+        networkServer.SendMessageToClient(AccountManager.changeUI + ',' + (int)screenID, id, pipeline);
     }
 
     #endregion
