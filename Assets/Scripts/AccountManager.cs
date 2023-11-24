@@ -90,7 +90,7 @@ public class AccountManager : MonoBehaviour
         }
         else if(type == playing)
         {
-
+            TalkToGameRoom(userData,clientConnectionID);
         }
         else
         { Debug.Log(userData); }
@@ -198,7 +198,10 @@ public class AccountManager : MonoBehaviour
 
     public void TalkToGameRoom(string[] userData, int clientConnectionID)
     {
-
+        if (acivePlayers.ContainsKey(clientConnectionID))
+        {
+            acivePlayers[clientConnectionID].inGameRoom.UpdatePlayers(userData, clientConnectionID);
+        }
     }
     
 }

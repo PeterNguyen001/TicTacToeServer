@@ -6,6 +6,8 @@ public class GameRoom
 {
     public string name { get; private set; }
 
+    public const int newGridPositionSign = 1;
+    public const int newGridSymbolSign = 2;
 
     private Dictionary<int, Account> players = new Dictionary<int, Account>();
     private List<string> ticTacToeGrid = Enumerable.Repeat("",9).ToList();
@@ -37,6 +39,14 @@ public GameRoom(Account player, string roomName)
         }
     }
 
+    public void UpdatePlayers(string[] csv, int id) 
+    { 
+        foreach(Account acc in players.Values) 
+        {
+            if(acc.id != id) 
+            { NetworkServerProcessing.SendMessageToClient(csv[0] + "," + csv[1] + "," + csv[2], acc.id, TransportPipeline.ReliableAndInOrder); }
+        }
+    }
     public void SetPlayerSymbol(string symbol, int id)
     {
         NetworkServerProcessing.SendMessageToClient(AccountManager.startGame + "," + symbol, id, TransportPipeline.ReliableAndInOrder);
