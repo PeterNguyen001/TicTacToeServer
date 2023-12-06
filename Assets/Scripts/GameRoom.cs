@@ -4,29 +4,29 @@ using UnityEngine;
 
 public class GameRoom
 {
-    public string name { get; private set; }
-
-    public const int newGridPositionSign = 1;
-    public const int newGridSymbolSign = 2;
-
+    public string Name { get; private set; }
     private Dictionary<int, Account> players = new Dictionary<int, Account>();
-    private List<string> ticTacToeGrid = Enumerable.Repeat("",9).ToList();
-public GameRoom(Account player, string roomName)
+    private List<string> ticTacToeGrid = Enumerable.Repeat(string.Empty, 9).ToList();
+
+    public GameRoom(Account player, string roomName)
     {
-        player.PutPlayerInGameroom(this);
-        players.Add(player.id, player);
-        name = roomName;
-        SetPlayerSymbol("X", player.id);
+        Name = roomName;
+        AddPlayer(player, "X");
     }
 
-    public void AddPlayer2(int id, Account player)
+    public void AddPlayer(Account player, string symbol)
     {
-        player.PutPlayerInGameroom(this);
-        players.Add(id, player);
-        SetPlayerSymbol("O", player.id);
+        player.PutPlayerInGameRoom(this);
+        players.Add(player.Id, player);
+        NotifyPlayerOfSymbol(symbol, player.Id);
     }
 
-    public void RemovePlayer(int id) 
+    public void AddSecondPlayer(Account player)
+    {
+        AddPlayer(player, "O");
+    }
+
+    public void RemovePlayer(int id)
     {
         if (players.ContainsKey(id))
         {
@@ -39,23 +39,25 @@ public GameRoom(Account player, string roomName)
         }
     }
 
-    public void UpdatePlayers(string[] csv, int id) 
-    { 
-        foreach(Account acc in players.Values) 
+    public void UpdatePlayers(string[] csv, int id)
+    {
+        string message = string.Join(",", csv);
+        foreach (Account account in players.Values.Where(acc => acc.Id != id))
         {
-            if(acc.id != id) 
-            { NetworkServerProcessing.SendMessageToClient(csv[0] + "," + csv[1] + "," + csv[2], acc.id, TransportPipeline.ReliableAndInOrder); }
+            NetworkServerProcessing.SendMessageToClient(message, account.Id, TransportPipeline.ReliableAndInOrder);
         }
     }
-    public void SetPlayerSymbol(string symbol, int id)
+
+    private void NotifyPlayerOfSymbol(string symbol, int id)
     {
-        NetworkServerProcessing.SendMessageToClient(ServerToClientSignifiers.startGame + "," + symbol, id, TransportPipeline.ReliableAndInOrder);
+        NetworkServerProcessing.SendMessageToClient($"{ServerToClientSignifiers.StartGame},{symbol}", id, TransportPipeline.ReliableAndInOrder);
     }
-    public Dictionary<int, Account> GetActivePlayers() { return players; }
 
-    public bool IsEmpty() { return players.Count == 0; }
+    public Dictionary<int, Account> GetActivePlayers() => players;
 
-    public bool IsFull() { return players.Count == 2; }
+    public bool IsEmpty() => players.Count == 0;
 
-    public bool IsHalfFull() { return players.Count == 1;}
+    public bool IsFull() => players.Count == 2;
+
+    public bool IsHalfFull() => players.Count == 1;
 }

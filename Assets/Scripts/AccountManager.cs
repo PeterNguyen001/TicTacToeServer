@@ -127,7 +127,7 @@ public class AccountManager : MonoBehaviour
                 Debug.Log("Logged In");
                 bFoundSameProfile = true;
                 NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomBrowserScreen, clientConnectionID, pipeline);
-                acc.id = clientConnectionID;
+                acc.Id = clientConnectionID;
                 acivePlayers.Add(clientConnectionID, acc);
                 break;
             }
@@ -167,7 +167,7 @@ public class AccountManager : MonoBehaviour
         Debug.Log("Removing");
         if(acivePlayers.ContainsKey(playerID) && acivePlayers[playerID].inGameRoom != null) 
         {
-                string roomPlayerIn = acivePlayers[playerID].inGameRoom.name;
+                string roomPlayerIn = acivePlayers[playerID].inGameRoom.Name;
                 roomsManager.RemovePlayerFromRoom(playerID, roomPlayerIn);
                 Debug.Log("Remove Player from Game Room");
                 NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomBrowserScreen, playerID, TransportPipeline.ReliableAndInOrder);
@@ -179,11 +179,11 @@ public class AccountManager : MonoBehaviour
         acivePlayers.Remove(playerID);
     }
 
-    public void UpdatePlayers(string[] userData, int clientConnectionID)
+    public void UpdatePlayers(string[] NewMove, int clientConnectionID)
     {
         if (acivePlayers.ContainsKey(clientConnectionID))
         {
-            acivePlayers[clientConnectionID].inGameRoom.UpdatePlayers(userData, clientConnectionID);
+            acivePlayers[clientConnectionID].inGameRoom.UpdatePlayers(NewMove, clientConnectionID);
         }
     }
     

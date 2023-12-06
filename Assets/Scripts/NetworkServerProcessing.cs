@@ -28,7 +28,7 @@ static public class NetworkServerProcessing
 
     static public void ChangeClientUI(int screenID, int id, TransportPipeline pipeline)
     {
-        networkServer.SendMessageToClient(ServerToClientSignifiers.changeUI + ',' + screenID, id, pipeline);
+        networkServer.SendMessageToClient(ServerToClientSignifiers.ChangeUI + ',' + screenID, id, pipeline);
     }
 
     #endregion
@@ -87,9 +87,9 @@ static public class ClientToServerSignifiers
 
 static public class ServerToClientSignifiers
 {
-    public const string changeUI = "1";
-    public const string startGame = "7";
-    public const string playing = "8";
+    public const string ChangeUI = "1";
+    public const string StartGame = "7";
+    public const string Playing = "8";
 }
 
 #endregion

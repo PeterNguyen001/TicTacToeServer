@@ -1,36 +1,26 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class GameRoomsManager : MonoBehaviour
 {
     private Dictionary<string, GameRoom> gameRooms = new Dictionary<string, GameRoom>();
 
-    // Start is called before the first frame update
     void Start()
     {
         NetworkServerProcessing.SetGameRoomManager(this);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public void CreateNewRoom(Account user, string roomName)
     {
-        gameRooms.Add(roomName ,new GameRoom(user, roomName));
-
-        if (gameRooms.ContainsKey(roomName))
+        if (!gameRooms.ContainsKey(roomName))
         {
-            NetworkServerProcessing.ChangeClientUI(ScreenID.GameWaitingRoomScreen, user.id, TransportPipeline.ReliableAndInOrder);
+            gameRooms.Add(roomName, new GameRoom(user, roomName));
+            NetworkServerProcessing.ChangeClientUI(ScreenID.GameWaitingRoomScreen, user.Id, TransportPipeline.ReliableAndInOrder);
             Debug.Log("Room created successfully.");
         }
         else
         {
-            Debug.Log("Failed to create a room.");
+            Debug.Log("Room already exists.");
         }
     }
 
@@ -38,18 +28,13 @@ public class GameRoomsManager : MonoBehaviour
     {
         if (gameRooms.TryGetValue(roomName, out GameRoom room))
         {
-            if (room.IsHalfFull())
+            if (!room.IsFull())
             {
-                room.AddPlayer2( player2.id, player2);
-                Debug.Log($"User {player2.username} added to room {roomName}.");
-                foreach (KeyValuePair<int, Account> playerEntry in room.GetActivePlayers())
-                {
-                    int id = playerEntry.Key; // This is the integer key
-                    NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomScreen, id, TransportPipeline.ReliableAndInOrder);
-                }
+                room.AddSecondPlayer(player2);
+                UpdateUIForAllPlayersInRoom(room);
                 return true;
             }
-            else if (room.IsFull())
+            else
             {
                 Debug.Log($"Room {roomName} already has two users.");
             }
@@ -61,6 +46,7 @@ public class GameRoomsManager : MonoBehaviour
 
         return false;
     }
+
     public GameRoom CheckForRoomExistence(string roomName)
     {
         if (gameRooms.TryGetValue(roomName, out GameRoom room))
@@ -72,29 +58,33 @@ public class GameRoomsManager : MonoBehaviour
         return null;
     }
 
-    public void RemoveRoomIfEmpty(string roomName)
-    {
-        if (gameRooms.TryGetValue(roomName, out GameRoom room))
-        {
-            if (room.IsEmpty())
-            {
-                gameRooms.Remove(roomName);
-                Debug.Log($"Room {roomName} removed because it's empty.");
-            }
-        }
-    }
-
     public void RemovePlayerFromRoom(int id, string roomName)
     {
         if (gameRooms.TryGetValue(roomName, out GameRoom room))
         {
             room.RemovePlayer(id);
             RemoveRoomIfEmpty(roomName);
-
         }
         else
         {
             Debug.Log($"Room {roomName} not found.");
+        }
+    }
+
+    private void RemoveRoomIfEmpty(string roomName)
+    {
+        if (gameRooms.TryGetValue(roomName, out GameRoom room) && room.IsEmpty())
+        {
+            gameRooms.Remove(roomName);
+            Debug.Log($"Room {roomName} removed because it's empty.");
+        }
+    }
+
+    private void UpdateUIForAllPlayersInRoom(GameRoom room)
+    {
+        foreach (KeyValuePair<int, Account> playerEntry in room.GetActivePlayers())
+        {
+            NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomScreen, playerEntry.Key, TransportPipeline.ReliableAndInOrder);
         }
     }
 }
