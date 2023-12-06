@@ -49,7 +49,7 @@ public GameRoom(Account player, string roomName)
     }
     public void SetPlayerSymbol(string symbol, int id)
     {
-        NetworkServerProcessing.SendMessageToClient(AccountManager.startGame + "," + symbol, id, TransportPipeline.ReliableAndInOrder);
+        NetworkServerProcessing.SendMessageToClient(ServerToClientSignifiers.startGame + "," + symbol, id, TransportPipeline.ReliableAndInOrder);
     }
     public Dictionary<int, Account> GetActivePlayers() { return players; }
 

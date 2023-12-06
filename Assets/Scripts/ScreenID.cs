@@ -2,12 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ScreenID
+public class ScreenID
 {
-    WelcomeScreen = 0,
-    RegisterScreen = 1,
-    LoginScreen = 2,
-    GameRoomBrowserScreen = 3,
-    GameWaitingRoomScreen = 4,
-    GameRoomScreen = 5
+    public const int WelcomeScreen = 0;
+    public const int GameRoomBrowserScreen = 1;
+    public const int GameWaitingRoomScreen = 2;
+    public const int GameRoomScreen = 3;
 }

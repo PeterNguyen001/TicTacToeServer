@@ -14,16 +14,11 @@ static public class NetworkServerProcessing
         string[] csv = msg.Split(',');
         int signifier = int.Parse(csv[0]);
 
-        if (signifier == ClientToServerSignifiers.asd)
-        {
-
-        }
         // else if (signifier == ClientToServerSignifiers.asd)
         // {
 
         // }
-        string type = csv[userType];
-        accountManager.CheckForUserType(csv, type,clientConnectionID,pipeline);
+        accountManager.CheckForUserType(csv, csv[userType], clientConnectionID,pipeline);
         //gameLogic.DoSomething();
     }
     static public void SendMessageToClient(string msg, int clientConnectionID, TransportPipeline pipeline)
@@ -31,9 +26,9 @@ static public class NetworkServerProcessing
         networkServer.SendMessageToClient(msg, clientConnectionID, pipeline);
     }
 
-    static public void ChangeClientUI(ScreenID screenID, int id, TransportPipeline pipeline)
+    static public void ChangeClientUI(int screenID, int id, TransportPipeline pipeline)
     {
-        networkServer.SendMessageToClient(AccountManager.changeUI + ',' + (int)screenID, id, pipeline);
+        networkServer.SendMessageToClient(ServerToClientSignifiers.changeUI + ',' + screenID, id, pipeline);
     }
 
     #endregion
@@ -46,6 +41,7 @@ static public class NetworkServerProcessing
     }
     static public void DisconnectionEvent(int clientConnectionID)
     {
+        accountManager.RemovePlayerFromRoom(clientConnectionID);
         accountManager.DisconnectPlayer(clientConnectionID);
         Debug.Log("Client disconnection, ID == " + clientConnectionID);
     }
@@ -82,12 +78,18 @@ static public class NetworkServerProcessing
 #region Protocol Signifiers
 static public class ClientToServerSignifiers
 {
-    public const int asd = 1;
+    public const string RegisterUser = "2";
+    public const string LogInUser = "3";
+    public const string FindGameRoom = "4";
+    public const string Playing = "8";
+    public const string GoBack = "10";
 }
 
 static public class ServerToClientSignifiers
 {
-    public const int asd = 1;
+    public const string changeUI = "1";
+    public const string startGame = "7";
+    public const string playing = "8";
 }
 
 #endregion

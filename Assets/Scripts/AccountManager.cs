@@ -10,98 +10,79 @@ using static UnityEngine.UIElements.UxmlAttributeDescription;
 public class AccountManager : MonoBehaviour
 {
     private LinkedList<Account> accountsList = new LinkedList<Account>();
-    [SerializeField]
-    Dictionary<int, Account> acivePlayers = new Dictionary<int, Account>();
-
-    private string clientUserID;
-    private string clientPass;
-    private string gameRoomName;
-
-    private string serverUserID;
-    private string serverPass;
-
-    public const int commandSign = 0;
-    private const int usernameSign = 1;
-    private const int passwordSign = 2;
-    private const int gameRoomNameSign = 1;
-    private const int goBackSign = 1;
-
-    public const string changeUI = "1";
-    public const string registerType = "2";
-    public const string loginType = "3";
-    public const string loggedInType = "4";
-    public const string waitType = "5";
-    public const string inRoom = "6";
-    public const string startGame = "7";
-    public const string playing = "8";
-    public const string goBack = "b";
+    private Dictionary<int, Account> acivePlayers = new Dictionary<int, Account>();
 
     [SerializeField]
-    GameRoomsManager roomsManager;
-    // Start is called before the first frame update
+    private GameRoomsManager roomsManager;
+
+    private const int UsernameSign = 1;
+    private const int PasswordSign = 2;
+    private const int GameRoomNameSign = 1;
+
+    string clientUsername;
+    string clientPass;
+
+    string serverPass;
+
+    string gameRoomName;
+
     void Awake()
     {
-        GetAllAccount();
+        LoadAllAccounts();
     }
 
-    private void GetAllAccount()
-    {
-        DirectoryInfo dir = new DirectoryInfo("Profiles");
-        //int fileCount = Directory.GetFiles("Profiles", "*.*", SearchOption.AllDirectories).Length;
-        foreach (FileInfo file in dir.GetFiles())
-        {
-            string id = Path.GetFileNameWithoutExtension(file.Name);
-            string pass;
-            using StreamReader sr = new StreamReader("Profiles/" + id + ".txt");
-            { pass = sr.ReadLine(); }
-            Debug.Log(id + " " + pass);
-            accountsList.AddLast(new Account(id, pass));
-        }
-    }
     void Start()
     {
         NetworkServerProcessing.SetAccountManager(this);
         roomsManager = FindObjectOfType<GameRoomsManager>();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void LoadAllAccounts()
     {
-        
+        DirectoryInfo dir = new DirectoryInfo("Profiles");
+        foreach (FileInfo file in dir.GetFiles())
+        {
+            string id = Path.GetFileNameWithoutExtension(file.Name);
+            string pass = File.ReadAllText(file.FullName);
+            Debug.Log($"{id} {pass}");
+            accountsList.AddLast(new Account(id, pass));
+        }
     }
+
     public void CheckForUserType(string[] userData, string type, int clientConnectionID, TransportPipeline pipeline)
     {
-        if (type == registerType)
+        switch (type)
         {
-            NetworkServerProcessing.SendMessageToClient("Registering", clientConnectionID, pipeline);
-            RegisterUser(userData, clientConnectionID, pipeline);
+            case ClientToServerSignifiers.RegisterUser:
+                RegisterUser(userData, clientConnectionID, pipeline);
+                break;
+            case ClientToServerSignifiers.LogInUser:
+                LoginUser(userData, clientConnectionID, pipeline);
+                break;
+            case ClientToServerSignifiers.FindGameRoom:
+                JoinOrCreateGame(userData, clientConnectionID, pipeline);
+                break;
+            case ClientToServerSignifiers.GoBack:
+                RemovePlayerFromRoom(clientConnectionID);
+                break;
+            case ClientToServerSignifiers.Playing:
+                UpdatePlayers(userData, clientConnectionID);
+                break;
+            case "0":
+                NetworkServerProcessing.DisconnectionEvent(clientConnectionID);
+                break;
+            default:
+                Debug.Log(userData);
+                break;
         }
-        else if (type == loginType)
-        {
-            NetworkServerProcessing.SendMessageToClient("Logging in", clientConnectionID, pipeline);
-            LoginUser(userData, clientConnectionID, pipeline);
-        }
-        else if(type == loggedInType)
-        { JoinOrCreateGame(userData, clientConnectionID, pipeline); }
-        else if(type == waitType || type == inRoom)
-        {
-            if (userData[goBackSign] == goBack)
-            { RemovePlayer(clientConnectionID); }
-        }
-        else if(type == playing)
-        {
-            TalkToGameRoom(userData,clientConnectionID);
-        }
-        else
-        { Debug.Log(userData); }
     }
     private void RegisterUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
         Debug.Log("Registering");
         bool sameName = false;
-        clientUserID = userData[usernameSign];
-        clientPass = userData[passwordSign];
-        Account newAccount = new Account(clientUserID, clientPass);
+        clientUsername = userData[UsernameSign];
+        clientPass = userData[PasswordSign];
+        Account newAccount = new Account(clientUsername, clientPass);
 
 
         foreach (Account acc in accountsList)
@@ -116,9 +97,10 @@ public class AccountManager : MonoBehaviour
         if (!sameName)
         {
             Debug.Log("Registered");
-            SaveNewProfile(userData, clientUserID);
+            SaveNewProfile(userData, clientUsername);
             accountsList.AddLast(newAccount);
-            //aciveUsers.Add(clientConnectionID, accountsList);
+            acivePlayers.Add(clientConnectionID, newAccount);
+            NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomBrowserScreen, clientConnectionID, pipeline);
             NetworkServerProcessing.SendMessageToClient("Registered", clientConnectionID, pipeline);
         }
     }
@@ -126,14 +108,16 @@ public class AccountManager : MonoBehaviour
     private void SaveNewProfile(string[] data, string id)
     {
         using (StreamWriter sw = new StreamWriter("Profiles/" + id + ".txt"))
-        { sw.Write(data[passwordSign]); }
+        { sw.Write(data[PasswordSign]); }
     }
     private void LoginUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
         bool bFoundSameProfile = false;
-        clientUserID = userData[usernameSign];
-        clientPass = userData[passwordSign];
-        Account newAccount = new Account(clientUserID, clientPass);
+
+        clientUsername = userData[UsernameSign];
+        clientPass = userData[PasswordSign];
+
+        Account newAccount = new Account(clientUsername, clientPass);
         foreach (Account acc in accountsList)
         {
             serverPass = acc.pass;
@@ -164,9 +148,7 @@ public class AccountManager : MonoBehaviour
         {
             newAccount = acivePlayers[clientConnectionID];
         }
-        clientUserID = newAccount.username;
-        clientPass = "";     
-        gameRoomName = userData[gameRoomNameSign];
+        gameRoomName = userData[GameRoomNameSign];
 
         if(roomsManager.CheckForRoomExistence(gameRoomName) == null) 
         { roomsManager.CreateNewRoom(newAccount, gameRoomName); }
@@ -180,23 +162,24 @@ public class AccountManager : MonoBehaviour
         Debug.Log("Create Game Room: " + gameRoomName);
     }
 
-    public void RemovePlayer(int playerID)
+    public void RemovePlayerFromRoom(int playerID)
     {
         Debug.Log("Removing");
-        if(acivePlayers.ContainsKey(playerID)) 
+        if(acivePlayers.ContainsKey(playerID) && acivePlayers[playerID].inGameRoom != null) 
         {
-            string roomPlayerIn = acivePlayers[playerID].inGameRoom.name;
-            roomsManager.RemovePlayerFromRoom(playerID, roomPlayerIn);
-            Debug.Log("Remove Player from Game Room");
+                string roomPlayerIn = acivePlayers[playerID].inGameRoom.name;
+                roomsManager.RemovePlayerFromRoom(playerID, roomPlayerIn);
+                Debug.Log("Remove Player from Game Room");
+                NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomBrowserScreen, playerID, TransportPipeline.ReliableAndInOrder);
         }
     }
     public void DisconnectPlayer(int playerID)
     {
-        RemovePlayer(playerID);
+        RemovePlayerFromRoom(playerID);
         acivePlayers.Remove(playerID);
     }
 
-    public void TalkToGameRoom(string[] userData, int clientConnectionID)
+    public void UpdatePlayers(string[] userData, int clientConnectionID)
     {
         if (acivePlayers.ContainsKey(clientConnectionID))
         {
