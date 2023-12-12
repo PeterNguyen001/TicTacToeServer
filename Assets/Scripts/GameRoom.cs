@@ -26,6 +26,12 @@ public class GameRoom
         AddPlayer(player, "O");
     }
 
+    public void AddSpectator(Account player)
+    {
+        AddPlayer(player, "Y");
+
+    }
+
     public void RemovePlayer(int id)
     {
         if (players.ContainsKey(id))

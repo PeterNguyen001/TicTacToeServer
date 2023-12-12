@@ -55,6 +55,10 @@ static public class NetworkServerProcessing
                 roomPlayerIn.UpdatePlayers(csv, clientConnectionID);
             }
         }
+        else if (signifier == ClientToServerSignifiers.updateHeartbeat)
+        {
+            networkServer.UpdateHeartbeatTime(clientConnectionID);
+        }
         //gameLogic.DoSomething();
     }
     static public void SendMessageToClient(string msg, int clientConnectionID, TransportPipeline pipeline)
@@ -64,7 +68,7 @@ static public class NetworkServerProcessing
 
     static public void ChangeClientUI(int screenID, int id, TransportPipeline pipeline)
     {
-        networkServer.SendMessageToClient(ServerToClientSignifiers.ChangeUI + ',' + screenID, id, pipeline);
+        networkServer.SendMessageToClient($"{ServerToClientSignifiers.ChangeUI},{screenID}", id, pipeline);
     }
 
     #endregion
@@ -77,7 +81,6 @@ static public class NetworkServerProcessing
     }
     static public void DisconnectionEvent(int clientConnectionID)
     {
-        accountManager.RemovePlayerFromRoom(clientConnectionID);
         accountManager.DisconnectPlayer(clientConnectionID);
         Debug.Log("Client disconnection, ID == " + clientConnectionID);
     }
@@ -117,15 +120,17 @@ static public class ClientToServerSignifiers
     public const int RegisterUser = 2;
     public const int LogInUser = 3;
     public const int FindGameRoom = 4;
+    public const int updateHeartbeat = 5;
     public const int Playing = 8;
     public const int GoBack = 10;
 }
 
 static public class ServerToClientSignifiers
 {
-    public const string ChangeUI = "1";
-    public const string StartGame = "7";
-    public const string Playing = "8";
+    public const int ChangeUI = 1;
+    public const int StartGame = 7;
+    public const int Playing = 8;
+    public const int Spectate = 9;
 }
 
 #endregion

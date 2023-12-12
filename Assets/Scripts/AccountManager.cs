@@ -47,34 +47,6 @@ public class AccountManager : MonoBehaviour
             accountsList.AddLast(new Account(id, pass));
         }
     }
-
-    //public void CheckForUserType(string[] userData, string type, int clientConnectionID, TransportPipeline pipeline)
-    //{
-    //    switch (type)
-    //    {
-    //        case ClientToServerSignifiers.RegisterUser:
-    //            RegisterUser(userData, clientConnectionID, pipeline);
-    //            break;
-    //        case ClientToServerSignifiers.LogInUser:
-    //            LoginUser(userData, clientConnectionID, pipeline);
-    //            break;
-    //        case ClientToServerSignifiers.FindGameRoom:
-    //            JoinOrCreateGame(userData, clientConnectionID, pipeline);
-    //            break;
-    //        case ClientToServerSignifiers.GoBack:
-    //            RemovePlayerFromRoom(clientConnectionID);
-    //            break;
-    //        case ClientToServerSignifiers.Playing:
-    //            UpdatePlayers(userData, clientConnectionID);
-    //            break;
-    //        case "0":
-    //            NetworkServerProcessing.DisconnectionEvent(clientConnectionID);
-    //            break;
-    //        default:
-    //            Debug.Log(userData);
-    //            break;
-    //    }
-    //}
     public void RegisterUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
         Debug.Log("Registering");
@@ -139,33 +111,17 @@ public class AccountManager : MonoBehaviour
             
         }
     }
-
-
-
-    public void RemovePlayerFromRoom(int playerID)
-    {
-        Debug.Log("Removing");
-        if(acivePlayers.ContainsKey(playerID) && acivePlayers[playerID].roomPlayerIn != null) 
-        {
-                string roomPlayerIn = acivePlayers[playerID].roomPlayerIn.Name;
-                roomsManager.RemovePlayerFromRoom(playerID, roomPlayerIn);
-                Debug.Log("Remove Player from Game Room");
-                NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomBrowserScreen, playerID, TransportPipeline.ReliableAndInOrder);
-        }
-    }
     public void DisconnectPlayer(int playerID)
     {
-        RemovePlayerFromRoom(playerID);
-        acivePlayers.Remove(playerID);
-    }
-
-    public void UpdatePlayers(string[] NewMove, int clientConnectionID)
-    {
-        if (acivePlayers.ContainsKey(clientConnectionID))
+        Debug.Log("Removing");
+        if (acivePlayers.ContainsKey(playerID) && acivePlayers[playerID].roomPlayerIn != null)
         {
-            acivePlayers[clientConnectionID].roomPlayerIn.UpdatePlayers(NewMove, clientConnectionID);
+            GameRoom roomPlayerIn = acivePlayers[playerID].roomPlayerIn;
+            roomPlayerIn.RemovePlayer(playerID);
+            Debug.Log("Remove Player from Game Room");
+            NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomBrowserScreen, playerID, TransportPipeline.ReliableAndInOrder);
         }
-    }
-    
+        acivePlayers.Remove(playerID);
+    }  
     public Dictionary<int, Account> ActivePlayers { get {  return acivePlayers; } }
 }

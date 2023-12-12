@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Networking.Transport;
 using System.Text;
 using System.Collections.Generic;
+using System.Linq;
 
 public class NetworkServer : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class NetworkServer : MonoBehaviour
     Dictionary<int, NetworkConnection> idToConnectionLookup;
     Dictionary<NetworkConnection, int> connectionToIDLookup;
 
+    private Dictionary<int, float> lastHeartbeatTimes = new Dictionary<int, float>();
+    float heartbeatTimeout = 5.0f;
     void Start()
     {
         if (NetworkServerProcessing.GetNetworkServer() == null)
@@ -59,6 +62,7 @@ public class NetworkServer : MonoBehaviour
 
     void Update()
     {
+        CheckHeartbeats();
         networkDriver.ScheduleUpdate().Complete();
 
         #region Remove Unused Connections
@@ -173,7 +177,31 @@ public class NetworkServer : MonoBehaviour
 
         buffer.Dispose();
     }
+    private void CheckHeartbeats()
+    {
+        float currentTime = Time.time;
+        foreach (var kvp in lastHeartbeatTimes.ToList())
+        {
+            if (currentTime - kvp.Value > heartbeatTimeout)
+            {
+                // Handle client disconnection
+                Debug.Log($"Client {kvp.Key} has disconnected.");
+                lastHeartbeatTimes.Remove(kvp.Key);
+                NetworkServerProcessing.DisconnectionEvent(kvp.Key);
+                // Additional disconnection handling code
+            }
+        }
+    }
 
+    public void UpdateHeartbeatTime(int clientId)
+    {
+        lastHeartbeatTimes[clientId] = Time.time;
+    }
+
+    public void AddPlayerToLastHeartbeat(int clientId)
+    {
+        lastHeartbeatTimes.Add(clientId, Time.time);
+    }
 }
 
 public enum TransportPipeline
