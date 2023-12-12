@@ -4,9 +4,12 @@ using UnityEngine;
 public class GameRoomsManager : MonoBehaviour
 {
     private Dictionary<string, GameRoom> gameRooms = new Dictionary<string, GameRoom>();
+    private Dictionary<int, Account> activePlayer;
 
+    private const int GameRoomNameSign = 1;
     void Start()
     {
+
         NetworkServerProcessing.SetGameRoomManager(this);
     }
 
@@ -86,5 +89,24 @@ public class GameRoomsManager : MonoBehaviour
         {
             NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomScreen, playerEntry.Key, TransportPipeline.ReliableAndInOrder);
         }
+    }
+    public void JoinOrCreateGame(string[] userData, int clientConnectionID, Account newAccount,TransportPipeline pipeline)
+    {
+
+
+
+
+        string gameRoomName = userData[GameRoomNameSign];
+
+        if (CheckForRoomExistence(gameRoomName) == null)
+        { CreateNewRoom(newAccount, gameRoomName); }
+        else
+        {
+            AddSecondPlayerToRoom(newAccount, gameRoomName);
+        }
+
+
+        NetworkServerProcessing.SendMessageToClient("Joining " + gameRoomName, clientConnectionID, pipeline);
+        Debug.Log("Create Game Room: " + gameRoomName);
     }
 }

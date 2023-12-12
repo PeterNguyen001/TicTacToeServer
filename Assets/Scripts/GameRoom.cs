@@ -31,6 +31,7 @@ public class GameRoom
         if (players.ContainsKey(id))
         {
             players.Remove(id);
+            NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomBrowserScreen, id, TransportPipeline.ReliableAndInOrder);
             Debug.Log("Remove player " + id);
         }
         else

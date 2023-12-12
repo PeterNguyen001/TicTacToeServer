@@ -18,7 +18,43 @@ static public class NetworkServerProcessing
         // {
 
         // }
-        accountManager.CheckForUserType(csv, csv[userType], clientConnectionID,pipeline);
+        //accountManager.CheckForUserType(csv, csv[userType], clientConnectionID,pipeline);
+        Dictionary<int, Account> ActivePlayers = accountManager.ActivePlayers;
+        GameRoom roomPlayerIn = null;
+        if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
+        {
+             roomPlayerIn = ActivePlayers[clientConnectionID].roomPlayerIn;
+        }
+
+        if (signifier == ClientToServerSignifiers.RegisterUser)
+        {
+            accountManager.RegisterUser(csv, clientConnectionID, pipeline);
+        }
+        else if(signifier == ClientToServerSignifiers.LogInUser)
+        {
+            accountManager.LoginUser(csv, clientConnectionID, pipeline);
+        }
+        else if(signifier == ClientToServerSignifiers.FindGameRoom)
+        {
+            if(ActivePlayers.ContainsKey(clientConnectionID))
+            {
+                gameRoomsManager.JoinOrCreateGame(csv, clientConnectionID, ActivePlayers[clientConnectionID], TransportPipeline.ReliableAndInOrder);
+            }
+        }
+        else if(signifier == ClientToServerSignifiers.GoBack)
+        {
+            if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
+            {
+                roomPlayerIn.RemovePlayer(clientConnectionID);
+            }
+        }
+        else if(signifier == ClientToServerSignifiers.Playing)
+        {
+            if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
+            {
+                roomPlayerIn.UpdatePlayers(csv, clientConnectionID);
+            }
+        }
         //gameLogic.DoSomething();
     }
     static public void SendMessageToClient(string msg, int clientConnectionID, TransportPipeline pipeline)
@@ -78,11 +114,11 @@ static public class NetworkServerProcessing
 #region Protocol Signifiers
 static public class ClientToServerSignifiers
 {
-    public const string RegisterUser = "2";
-    public const string LogInUser = "3";
-    public const string FindGameRoom = "4";
-    public const string Playing = "8";
-    public const string GoBack = "10";
+    public const int RegisterUser = 2;
+    public const int LogInUser = 3;
+    public const int FindGameRoom = 4;
+    public const int Playing = 8;
+    public const int GoBack = 10;
 }
 
 static public class ServerToClientSignifiers

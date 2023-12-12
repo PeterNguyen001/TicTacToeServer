@@ -9,7 +9,7 @@ public class Account
 
     public int Id { get; set; }
 
-    public GameRoom inGameRoom { get; private set; }
+    public GameRoom roomPlayerIn { get; private set; }
 
     public Account(string username, string pass)
     {
@@ -17,7 +17,7 @@ public class Account
         this.pass = pass;
     }
 
-    public void PutPlayerInGameRoom( GameRoom gameRoom) { inGameRoom = gameRoom; }
+    public void PutPlayerInGameRoom( GameRoom gameRoom) { roomPlayerIn = gameRoom; }
 
     // Overriding the Equals method
     public override bool Equals(object obj)

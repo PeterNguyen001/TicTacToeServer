@@ -17,7 +17,6 @@ public class AccountManager : MonoBehaviour
 
     private const int UsernameSign = 1;
     private const int PasswordSign = 2;
-    private const int GameRoomNameSign = 1;
 
     string clientUsername;
     string clientPass;
@@ -49,34 +48,34 @@ public class AccountManager : MonoBehaviour
         }
     }
 
-    public void CheckForUserType(string[] userData, string type, int clientConnectionID, TransportPipeline pipeline)
-    {
-        switch (type)
-        {
-            case ClientToServerSignifiers.RegisterUser:
-                RegisterUser(userData, clientConnectionID, pipeline);
-                break;
-            case ClientToServerSignifiers.LogInUser:
-                LoginUser(userData, clientConnectionID, pipeline);
-                break;
-            case ClientToServerSignifiers.FindGameRoom:
-                JoinOrCreateGame(userData, clientConnectionID, pipeline);
-                break;
-            case ClientToServerSignifiers.GoBack:
-                RemovePlayerFromRoom(clientConnectionID);
-                break;
-            case ClientToServerSignifiers.Playing:
-                UpdatePlayers(userData, clientConnectionID);
-                break;
-            case "0":
-                NetworkServerProcessing.DisconnectionEvent(clientConnectionID);
-                break;
-            default:
-                Debug.Log(userData);
-                break;
-        }
-    }
-    private void RegisterUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
+    //public void CheckForUserType(string[] userData, string type, int clientConnectionID, TransportPipeline pipeline)
+    //{
+    //    switch (type)
+    //    {
+    //        case ClientToServerSignifiers.RegisterUser:
+    //            RegisterUser(userData, clientConnectionID, pipeline);
+    //            break;
+    //        case ClientToServerSignifiers.LogInUser:
+    //            LoginUser(userData, clientConnectionID, pipeline);
+    //            break;
+    //        case ClientToServerSignifiers.FindGameRoom:
+    //            JoinOrCreateGame(userData, clientConnectionID, pipeline);
+    //            break;
+    //        case ClientToServerSignifiers.GoBack:
+    //            RemovePlayerFromRoom(clientConnectionID);
+    //            break;
+    //        case ClientToServerSignifiers.Playing:
+    //            UpdatePlayers(userData, clientConnectionID);
+    //            break;
+    //        case "0":
+    //            NetworkServerProcessing.DisconnectionEvent(clientConnectionID);
+    //            break;
+    //        default:
+    //            Debug.Log(userData);
+    //            break;
+    //    }
+    //}
+    public void RegisterUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
         Debug.Log("Registering");
         bool sameName = false;
@@ -110,7 +109,7 @@ public class AccountManager : MonoBehaviour
         using (StreamWriter sw = new StreamWriter("Profiles/" + id + ".txt"))
         { sw.Write(data[PasswordSign]); }
     }
-    private void LoginUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
+    public void LoginUser(string[] userData, int clientConnectionID, TransportPipeline pipeline)
     {
         bool bFoundSameProfile = false;
 
@@ -141,33 +140,14 @@ public class AccountManager : MonoBehaviour
         }
     }
 
-    private void JoinOrCreateGame(string[] userData, int clientConnectionID, TransportPipeline pipeline)
-    {
-        Account newAccount = null;
-        if ((acivePlayers.ContainsKey(clientConnectionID)))
-        {
-            newAccount = acivePlayers[clientConnectionID];
-        }
-        gameRoomName = userData[GameRoomNameSign];
 
-        if(roomsManager.CheckForRoomExistence(gameRoomName) == null) 
-        { roomsManager.CreateNewRoom(newAccount, gameRoomName); }
-        else
-        { 
-            roomsManager.AddSecondPlayerToRoom(newAccount, gameRoomName);          
-        }
-        
- 
-        NetworkServerProcessing.SendMessageToClient("Joining " + gameRoomName, clientConnectionID, pipeline);
-        Debug.Log("Create Game Room: " + gameRoomName);
-    }
 
     public void RemovePlayerFromRoom(int playerID)
     {
         Debug.Log("Removing");
-        if(acivePlayers.ContainsKey(playerID) && acivePlayers[playerID].inGameRoom != null) 
+        if(acivePlayers.ContainsKey(playerID) && acivePlayers[playerID].roomPlayerIn != null) 
         {
-                string roomPlayerIn = acivePlayers[playerID].inGameRoom.Name;
+                string roomPlayerIn = acivePlayers[playerID].roomPlayerIn.Name;
                 roomsManager.RemovePlayerFromRoom(playerID, roomPlayerIn);
                 Debug.Log("Remove Player from Game Room");
                 NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomBrowserScreen, playerID, TransportPipeline.ReliableAndInOrder);
@@ -183,8 +163,9 @@ public class AccountManager : MonoBehaviour
     {
         if (acivePlayers.ContainsKey(clientConnectionID))
         {
-            acivePlayers[clientConnectionID].inGameRoom.UpdatePlayers(NewMove, clientConnectionID);
+            acivePlayers[clientConnectionID].roomPlayerIn.UpdatePlayers(NewMove, clientConnectionID);
         }
     }
     
+    public Dictionary<int, Account> ActivePlayers { get {  return acivePlayers; } }
 }
