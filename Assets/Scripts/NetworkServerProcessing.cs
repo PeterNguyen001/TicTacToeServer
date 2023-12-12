@@ -13,53 +13,75 @@ static public class NetworkServerProcessing
 
         string[] csv = msg.Split(',');
         int signifier = int.Parse(csv[0]);
+        HandleMessage(signifier, csv, clientConnectionID, pipeline);
+       
 
-        // else if (signifier == ClientToServerSignifiers.asd)
-        // {
 
-        // }
-        //accountManager.CheckForUserType(csv, csv[userType], clientConnectionID,pipeline);
+        //if (signifier == ClientToServerSignifiers.RegisterUser)
+        //{
+        //    accountManager.RegisterUser(csv, clientConnectionID, pipeline);
+        //}
+        //else if(signifier == ClientToServerSignifiers.LogInUser)
+        //{
+        //    accountManager.LoginUser(csv, clientConnectionID, pipeline);
+        //}
+        //else if(signifier == ClientToServerSignifiers.FindGameRoom)
+        //{
+        //    if(ActivePlayers.ContainsKey(clientConnectionID))
+        //    {
+        //        gameRoomsManager.JoinOrCreateGame(csv, clientConnectionID, ActivePlayers[clientConnectionID], TransportPipeline.ReliableAndInOrder);
+        //    }
+        //}
+        //else if(signifier == ClientToServerSignifiers.GoBack)
+        //{
+        //    if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
+        //    {
+        //        roomPlayerIn.RemovePlayer(clientConnectionID);
+        //    }
+        //}
+        //else if(signifier == ClientToServerSignifiers.Playing)
+        //{
+        //    if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
+        //    {
+        //        roomPlayerIn.UpdatePlayers(csv, clientConnectionID);
+        //    }
+        //}
+        //else if (signifier == ClientToServerSignifiers.updateHeartbeat)
+        //{
+        //    networkServer.UpdateHeartbeatTime(clientConnectionID);
+        //}
+
+    }
+    private static void HandleMessage(int signifier, string[] csv, int clientConnectionID, TransportPipeline pipeline)
+    {
         Dictionary<int, Account> ActivePlayers = accountManager.ActivePlayers;
         GameRoom roomPlayerIn = null;
         if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
         {
-             roomPlayerIn = ActivePlayers[clientConnectionID].roomPlayerIn;
+            roomPlayerIn = ActivePlayers[clientConnectionID].roomPlayerIn;
         }
-
-        if (signifier == ClientToServerSignifiers.RegisterUser)
+        switch (signifier)
         {
-            accountManager.RegisterUser(csv, clientConnectionID, pipeline);
-        }
-        else if(signifier == ClientToServerSignifiers.LogInUser)
-        {
-            accountManager.LoginUser(csv, clientConnectionID, pipeline);
-        }
-        else if(signifier == ClientToServerSignifiers.FindGameRoom)
-        {
-            if(ActivePlayers.ContainsKey(clientConnectionID))
-            {
-                gameRoomsManager.JoinOrCreateGame(csv, clientConnectionID, ActivePlayers[clientConnectionID], TransportPipeline.ReliableAndInOrder);
-            }
-        }
-        else if(signifier == ClientToServerSignifiers.GoBack)
-        {
-            if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
-            {
+            case ClientToServerSignifiers.RegisterUser:
+                accountManager.RegisterUser(csv, clientConnectionID, pipeline);
+                break;
+            case ClientToServerSignifiers.LogInUser:
+                accountManager.LoginUser(csv, clientConnectionID, pipeline);
+                break;
+            case ClientToServerSignifiers.FindGameRoom:
+                gameRoomsManager.JoinOrCreateGame(csv, clientConnectionID, ActivePlayers[clientConnectionID]);
+                break;
+            case ClientToServerSignifiers.GoBack:
                 roomPlayerIn.RemovePlayer(clientConnectionID);
-            }
-        }
-        else if(signifier == ClientToServerSignifiers.Playing)
-        {
-            if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
-            {
+                break;
+            case ClientToServerSignifiers.Playing:
                 roomPlayerIn.UpdatePlayers(csv, clientConnectionID);
-            }
+                break;
+            case ClientToServerSignifiers.updateHeartbeat:
+                networkServer.UpdateHeartbeatTime(clientConnectionID);
+                break;
+                // Add other cases as needed
         }
-        else if (signifier == ClientToServerSignifiers.updateHeartbeat)
-        {
-            networkServer.UpdateHeartbeatTime(clientConnectionID);
-        }
-        //gameLogic.DoSomething();
     }
     static public void SendMessageToClient(string msg, int clientConnectionID, TransportPipeline pipeline)
     {

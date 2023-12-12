@@ -31,11 +31,11 @@ public class GameRoomsManager : MonoBehaviour
     {
         if (gameRooms.TryGetValue(roomName, out GameRoom room))
         {
-            if (!room.IsFull())
+            if (room.IsHalfFull())
             {
                 room.AddSecondPlayer(player);
             }
-            else
+            else if( room.IsFull())
             {
                 room.AddSpectator(player);
                 Debug.Log($"Room {roomName} already has two users.");
@@ -91,7 +91,7 @@ public class GameRoomsManager : MonoBehaviour
             NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomScreen, playerEntry.Key, TransportPipeline.ReliableAndInOrder);
         }
     }
-    public void JoinOrCreateGame(string[] userData, int clientConnectionID, Account newAccount,TransportPipeline pipeline)
+    public void JoinOrCreateGame(string[] userData, int clientConnectionID, Account newAccount)
     {
         string gameRoomName = userData[GameRoomNameSign];
 
@@ -101,7 +101,7 @@ public class GameRoomsManager : MonoBehaviour
         {
             AddPlayerToRoom(newAccount, gameRoomName);
         }
-        NetworkServerProcessing.SendMessageToClient("Joining " + gameRoomName, clientConnectionID, pipeline);
+        NetworkServerProcessing.SendMessageToClient("Joining " + gameRoomName, clientConnectionID, TransportPipeline.ReliableAndInOrder);
         Debug.Log("Create Game Room: " + gameRoomName);
     }
 }
