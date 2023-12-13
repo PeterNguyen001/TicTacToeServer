@@ -14,78 +14,54 @@ static public class NetworkServerProcessing
         string[] csv = msg.Split(',');
         int signifier = int.Parse(csv[0]);
         HandleMessage(signifier, csv, clientConnectionID, pipeline);
-       
-
-
-        //if (signifier == ClientToServerSignifiers.RegisterUser)
-        //{
-        //    accountManager.RegisterUser(csv, clientConnectionID, pipeline);
-        //}
-        //else if(signifier == ClientToServerSignifiers.LogInUser)
-        //{
-        //    accountManager.LoginUser(csv, clientConnectionID, pipeline);
-        //}
-        //else if(signifier == ClientToServerSignifiers.FindGameRoom)
-        //{
-        //    if(ActivePlayers.ContainsKey(clientConnectionID))
-        //    {
-        //        gameRoomsManager.JoinOrCreateGame(csv, clientConnectionID, ActivePlayers[clientConnectionID], TransportPipeline.ReliableAndInOrder);
-        //    }
-        //}
-        //else if(signifier == ClientToServerSignifiers.GoBack)
-        //{
-        //    if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
-        //    {
-        //        roomPlayerIn.RemovePlayer(clientConnectionID);
-        //    }
-        //}
-        //else if(signifier == ClientToServerSignifiers.Playing)
-        //{
-        //    if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
-        //    {
-        //        roomPlayerIn.UpdatePlayers(csv, clientConnectionID);
-        //    }
-        //}
-        //else if (signifier == ClientToServerSignifiers.updateHeartbeat)
-        //{
-        //    networkServer.UpdateHeartbeatTime(clientConnectionID);
-        //}
 
     }
     private static void HandleMessage(int signifier, string[] csv, int clientConnectionID, TransportPipeline pipeline)
     {
-        Dictionary<int, Account> ActivePlayers = accountManager.ActivePlayers;
+        Dictionary<int, Account> activePlayers = accountManager.ActivePlayers;
         GameRoom roomPlayerIn = null;
-        if (ActivePlayers.ContainsKey(clientConnectionID) && ActivePlayers[clientConnectionID].roomPlayerIn != null)
+        int chatMsgSign = 1;
+
+        if (activePlayers.ContainsKey(clientConnectionID) && activePlayers[clientConnectionID].roomPlayerIn != null)
         {
-            roomPlayerIn = ActivePlayers[clientConnectionID].roomPlayerIn;
+            roomPlayerIn = activePlayers[clientConnectionID].roomPlayerIn;
         }
+
         switch (signifier)
         {
             case ClientToServerSignifiers.RegisterUser:
-                accountManager.RegisterUser(csv, clientConnectionID, pipeline);
-                break;
+                accountManager.RegisterUser(csv, clientConnectionID, pipeline); break;
             case ClientToServerSignifiers.LogInUser:
-                accountManager.LoginUser(csv, clientConnectionID, pipeline);
-                break;
+                accountManager.LoginUser(csv, clientConnectionID, pipeline); break;
             case ClientToServerSignifiers.FindGameRoom:
-                gameRoomsManager.JoinOrCreateGame(csv, clientConnectionID, ActivePlayers[clientConnectionID]);
-                break;
+                gameRoomsManager.JoinOrCreateGame(csv, clientConnectionID, activePlayers[clientConnectionID]); break;
             case ClientToServerSignifiers.GoBack:
-                roomPlayerIn.RemovePlayer(clientConnectionID);
-                break;
+                gameRoomsManager.RemovePlayerFromRoom(clientConnectionID); break;
             case ClientToServerSignifiers.Playing:
-                roomPlayerIn.UpdatePlayers(csv, clientConnectionID);
-                break;
+                roomPlayerIn.UpdatePlayers(csv, clientConnectionID); break;
             case ClientToServerSignifiers.updateHeartbeat:
-                networkServer.UpdateHeartbeatTime(clientConnectionID);
-                break;
+                networkServer.UpdateHeartbeatTime(clientConnectionID); break;
+            case ClientToServerSignifiers.ChatMessage:
+                SendChatMessageToAllClient(csv[chatMsgSign], activePlayers, pipeline); break;
                 // Add other cases as needed
         }
     }
     static public void SendMessageToClient(string msg, int clientConnectionID, TransportPipeline pipeline)
     {
         networkServer.SendMessageToClient(msg, clientConnectionID, pipeline);
+    }
+
+    static public void SendChatMessageToAllClient(string msg, Dictionary<int, Account> activePlayers, TransportPipeline pipeline)
+    {
+        foreach(int clientConnectionID in activePlayers.Keys)
+        {
+            SendMessageToClient($"{ServerToClientSignifiers.ChatMessage},{msg}", clientConnectionID, TransportPipeline.ReliableAndInOrder);
+        }
+    }
+
+    static public void SendChatMessageToClient(string msg, int clientConnectionID, TransportPipeline pipeline)
+    {
+            SendMessageToClient($"{ServerToClientSignifiers.ChatMessage},{msg}", clientConnectionID, TransportPipeline.ReliableAndInOrder);
     }
 
     static public void ChangeClientUI(int screenID, int id, TransportPipeline pipeline)
@@ -99,10 +75,12 @@ static public class NetworkServerProcessing
 
     static public void ConnectionEvent(int clientConnectionID)
     {
+        networkServer.AddPlayerToLastHeartbeat(clientConnectionID);
         Debug.Log("Client connection, ID == " + clientConnectionID);
     }
     static public void DisconnectionEvent(int clientConnectionID)
     {
+        gameRoomsManager.RemovePlayerFromRoom(clientConnectionID);
         accountManager.DisconnectPlayer(clientConnectionID);
         Debug.Log("Client disconnection, ID == " + clientConnectionID);
     }
@@ -145,6 +123,7 @@ static public class ClientToServerSignifiers
     public const int updateHeartbeat = 5;
     public const int Playing = 8;
     public const int GoBack = 10;
+    public const int ChatMessage = 11;
 }
 
 static public class ServerToClientSignifiers
@@ -153,6 +132,7 @@ static public class ServerToClientSignifiers
     public const int StartGame = 7;
     public const int Playing = 8;
     public const int Spectate = 9;
+    public const int ChatMessage = 11;
 }
 
 #endregion

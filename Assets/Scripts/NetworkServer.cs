@@ -180,14 +180,14 @@ public class NetworkServer : MonoBehaviour
     private void CheckHeartbeats()
     {
         float currentTime = Time.time;
-        foreach (var kvp in lastHeartbeatTimes.ToList())
+        foreach (var heartTracker in lastHeartbeatTimes.ToList())
         {
-            if (currentTime - kvp.Value > heartbeatTimeout)
+            if (currentTime - heartTracker.Value > heartbeatTimeout)
             {
                 // Handle client disconnection
-                Debug.Log($"Client {kvp.Key} has disconnected.");
-                lastHeartbeatTimes.Remove(kvp.Key);
-                NetworkServerProcessing.DisconnectionEvent(kvp.Key);
+                Debug.Log($"Client {heartTracker.Key} has disconnected.");
+                lastHeartbeatTimes.Remove(heartTracker.Key);
+                NetworkServerProcessing.DisconnectionEvent(heartTracker.Key);
                 // Additional disconnection handling code
             }
         }

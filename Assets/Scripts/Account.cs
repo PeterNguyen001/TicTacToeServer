@@ -18,6 +18,7 @@ public class Account
     }
 
     public void PutPlayerInGameRoom( GameRoom gameRoom) { roomPlayerIn = gameRoom; }
+    public void RemoveRoom() { roomPlayerIn = null; }
 
     // Overriding the Equals method
     public override bool Equals(object obj)

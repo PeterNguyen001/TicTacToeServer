@@ -105,23 +105,18 @@ public class AccountManager : MonoBehaviour
         }
         if (!bFoundSameProfile)
         {
-
             Debug.Log("Invalid User or Password");
-            NetworkServerProcessing.SendMessageToClient("Invalid User or Password", clientConnectionID, pipeline);
-            
+            NetworkServerProcessing.SendMessageToClient("Invalid User or Password", clientConnectionID, pipeline);          
         }
     }
     public void DisconnectPlayer(int playerID)
     {
         Debug.Log("Removing");
-        if (acivePlayers.ContainsKey(playerID) && acivePlayers[playerID].roomPlayerIn != null)
+        if (acivePlayers.ContainsKey(playerID))
         {
-            GameRoom roomPlayerIn = acivePlayers[playerID].roomPlayerIn;
-            roomPlayerIn.RemovePlayer(playerID);
-            Debug.Log("Remove Player from Game Room");
+            acivePlayers.Remove(playerID);
             NetworkServerProcessing.ChangeClientUI(ScreenID.GameRoomBrowserScreen, playerID, TransportPipeline.ReliableAndInOrder);
         }
-        acivePlayers.Remove(playerID);
     }  
     public Dictionary<int, Account> ActivePlayers { get {  return acivePlayers; } }
 }

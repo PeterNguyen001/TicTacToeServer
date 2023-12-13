@@ -4,7 +4,7 @@ using UnityEngine;
 public class GameRoomsManager : MonoBehaviour
 {
     private Dictionary<string, GameRoom> gameRooms = new Dictionary<string, GameRoom>();
-    private Dictionary<int, Account> activePlayer;
+    private Dictionary<int, Account> playersUsingRoom = new Dictionary<int, Account>();
 
     private const int GameRoomNameSign = 1;
     void Start()
@@ -27,7 +27,7 @@ public class GameRoomsManager : MonoBehaviour
         }
     }
 
-    public bool AddPlayerToRoom(Account player, string roomName)
+    public void AddPlayerToRoom(Account player, string roomName)
     {
         if (gameRooms.TryGetValue(roomName, out GameRoom room))
         {
@@ -41,14 +41,11 @@ public class GameRoomsManager : MonoBehaviour
                 Debug.Log($"Room {roomName} already has two users.");
             }
             UpdateUIForAllPlayersInRoom(room);
-            return true;
         }
         else
         {
             Debug.Log($"Room {roomName} not found.");
         }
-
-        return false;
     }
 
     public GameRoom CheckForRoomExistence(string roomName)
@@ -62,28 +59,27 @@ public class GameRoomsManager : MonoBehaviour
         return null;
     }
 
-    public void RemovePlayerFromRoom(int id, string roomName)
+    public void RemovePlayerFromRoom(int id)
     {
-        if (gameRooms.TryGetValue(roomName, out GameRoom room))
+        if (playersUsingRoom.ContainsKey(id))
         {
-            room.RemovePlayer(id);
-            RemoveRoomIfEmpty(roomName);
-        }
-        else
-        {
-            Debug.Log($"Room {roomName} not found.");
+            if (playersUsingRoom[id].roomPlayerIn != null)
+            {
+                GameRoom room = playersUsingRoom[id].roomPlayerIn;
+                room.RemovePlayer(id);
+                playersUsingRoom.Remove(id);
+                if (room.IsEmpty())
+                {
+                    gameRooms.Remove(room.Name);
+                    Debug.Log($"Room removed because it's empty.");
+                }
+            }
+            else
+            {
+                Debug.Log($"Room not found.");
+            }
         }
     }
-
-    private void RemoveRoomIfEmpty(string roomName)
-    {
-        if (gameRooms.TryGetValue(roomName, out GameRoom room) && room.IsEmpty())
-        {
-            gameRooms.Remove(roomName);
-            Debug.Log($"Room {roomName} removed because it's empty.");
-        }
-    }
-
     private void UpdateUIForAllPlayersInRoom(GameRoom room)
     {
         foreach (KeyValuePair<int, Account> playerEntry in room.GetActivePlayers())
@@ -101,7 +97,9 @@ public class GameRoomsManager : MonoBehaviour
         {
             AddPlayerToRoom(newAccount, gameRoomName);
         }
+        playersUsingRoom.Add(clientConnectionID, newAccount);
+
         NetworkServerProcessing.SendMessageToClient("Joining " + gameRoomName, clientConnectionID, TransportPipeline.ReliableAndInOrder);
-        Debug.Log("Create Game Room: " + gameRoomName);
+
     }
 }
